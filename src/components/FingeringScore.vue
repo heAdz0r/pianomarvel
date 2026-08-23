@@ -2363,6 +2363,112 @@ export function measureWindowRange(
   const from = Math.max(1, Math.min(selected, last - size + 1));
   return { from, to: Math.min(last, from + size - 1) };
 }
+
+/** Пол кегля из дизайн-токенов: мельче 11px подписей в проекте не бывает. */
+const LINE_MIN_FONT = 11;
+/**
+ * Кегль, ниже которого слово счёта проигрывает крупной цифре доли: 15px —
+ * это `--text-body`, ступень основного текста в шкале проекта. Порог заодно
+ * держит формат единым между размерами: и 3/4, и 4/4 на пяти тактах считают
+ * цифрами, а не «Раз и Два» в одном размере и «1 и 2» в другом.
+ */
+const LINE_WORD_MIN_FONT = 15;
+/** Воздух по краям клетки счёта, чтобы соседние слоги не смыкались. */
+const LINE_CELL_GUTTER = 6;
+/** Клетка уже этой не даёт места ни точке, ни ноте с её линией длительности. */
+const LINE_MIN_CELL = 18;
+
+/**
+ * Минимальная ширина позиции счёта. В клетку обязан помещаться номер доли на
+ * полу кегля — это последний вариант, до которого доходит сокращение. Для
+ * 12/8 номер двузначный, и фиксированных 18px ему уже не хватает: полоса
+ * должна прокручиваться, а не резать цифру.
+ */
+export function lineMinCellWidth(
+  lastPulse: number,
+  measureText: (text: string, font: number) => number,
+): number {
+  const digits = String(Math.max(1, Math.floor(lastPulse)));
+  return Math.max(
+    LINE_MIN_CELL,
+    Math.ceil(measureText(digits, LINE_MIN_FONT)) + LINE_CELL_GUTTER,
+  );
+}
+
+export interface LineCountInput {
+  /** Ширина одной позиции счёта, px. */
+  cellWidth: number;
+  /** Самое длинное слово доли в отрезке: «Четыре». */
+  pulseWord: string;
+  /** Самый длинный слог половины доли в отрезке: «оль». */
+  offbeatSyllable: string;
+  /** Номер последней доли отрезка: от него зависит ширина цифры. */
+  lastPulse: number;
+  /**
+   * Ширина строки в реальном шрифте счёта при заданном кегле. Меряем, а не
+   * оцениваем через «среднюю ширину знака»: наборный шрифт счёта широкий, и
+   * по оценке «Два» помещалось в клетку, а на экране обрезалось до «Дв».
+   */
+  measureText: (text: string, font: number) => number;
+}
+
+export interface LineCountLayout {
+  /** Печатать слово доли, а не её номер. */
+  words: boolean;
+  /** Печатать слог половины доли, а не точку. */
+  offbeats: boolean;
+  pulseFont: number;
+  offbeatFont: number;
+}
+
+/**
+ * Строка счёта в формате «в линию»: что помещается в клетку и каким кеглем.
+ * «Четыре» в клетке 22px не помещается даже на полу кегля и наезжает на
+ * соседнее «и», поэтому там печатается номер доли. Решение общее на весь
+ * отрезок: вперемешку «Раз / Два / Три / 4» читалось бы как сбой, а не как
+ * сокращение.
+ *
+ * Кегль подбирается под то, что печатается на самом деле. Иначе цифра доли
+ * осталась бы на полу 11px в клетке, куда помещается 20px, и счёт был бы
+ * мелким без всякой причины.
+ */
+export function lineCountLayout(input: LineCountInput): LineCountLayout {
+  const room = Math.max(0, input.cellWidth - LINE_CELL_GUTTER);
+  /*
+   * Слово печатается, только если помещается читаемым кеглем. Иначе «Четыре»
+   * в клетке 45px пришлось бы набирать одиннадцатым, а крупная цифра доли на
+   * том же месте читается лучше любого мелкого слова.
+   */
+  const words = input.pulseWord.length > 0
+    && input.measureText(input.pulseWord, LINE_WORD_MIN_FONT) <= room;
+  const offbeats = input.offbeatSyllable.length > 0
+    && input.measureText(input.offbeatSyllable, LINE_MIN_FONT) <= room;
+  /** Наибольший кегль из шкалы, при котором строка ещё влезает в клетку. */
+  const fitFont = (text: string, max: number): number => {
+    for (let font = max; font > LINE_MIN_FONT; font -= 1) {
+      if (input.measureText(text, font) <= room) return font;
+    }
+    return LINE_MIN_FONT;
+  };
+  const digits = String(Math.max(1, Math.floor(input.lastPulse)));
+  const pulseFont = fitFont(words ? input.pulseWord : digits, 20);
+  return {
+    words,
+    offbeats,
+    pulseFont,
+    /*
+     * Половина доли не может быть крупнее самой доли: счёт опирается на долю,
+     * и перевёрнутая иерархия сбивает с ритма сильнее мелкого шрифта.
+     */
+    offbeatFont: Math.max(
+      LINE_MIN_FONT,
+      Math.min(
+        fitFont(offbeats ? input.offbeatSyllable : "·", 15),
+        Math.round(pulseFont * 0.78),
+      ),
+    ),
+  };
+}
 </script>
 
 <script setup lang="ts">
@@ -2598,6 +2704,26 @@ function rhythmHandTitle(hand: FingeringHand): string {
   return hand === "right" ? "Правая" : "Левая";
 }
 
+/**
+ * Подпись на клетке счёта. В столбик помещается слово, в линию — только
+ * число: обрезанное «ак…» не читается вообще, а полный текст всё равно есть
+ * в подсказке по наведению и в aria-label.
+ */
+function rhythmCellCountLabel(state: RhythmHandState): string { // changed: вместо обрезанного текста
+  const sequence = state.attackOnsets > 1;
+  if (!sequence && state.attackNotes <= 1) return "";
+  if (effectiveDetailLayout.value === "line") {
+    // Клетка уже 22px не вмещает даже двузначный чип: там он только мешает
+    // читать счёт, а полная расшифровка всё равно живёт в подсказке.
+    if (lineCellWidth.value < 22) return "";
+    return sequence ? `${state.attackOnsets}×` : `${state.attackNotes}`;
+  }
+  // «2 атаки» начинающему ничего не говорит: подписываем действием.
+  return sequence
+    ? `${state.attackOnsets} подряд`
+    : `${state.attackNotes} вместе`;
+}
+
 function rhythmHandMark(state: RhythmHandState): string {
   if (state.kind === "attack") return "●";
   // Музыкальный rest-glyph зависит от SMuFL-шрифта и в системном шрифте
@@ -2606,20 +2732,55 @@ function rhythmHandMark(state: RhythmHandState): string {
   return "";
 }
 
+/** Русское склонение слова «нота» по числу: 1 нота, 2 ноты, 5 нот. */
+function noteWord(count: number): string {
+  const tail = count % 10;
+  const teen = count % 100;
+  if (teen >= 11 && teen <= 14) return "нот";
+  if (tail === 1) return "ноту";
+  if (tail >= 2 && tail <= 4) return "ноты";
+  return "нот";
+}
+
+/**
+ * Несколько нот внутри одной позиции счёта — самое непонятное место для
+ * начинающего. Слова «атака» и «позиция» ему ничего не говорят, поэтому
+ * объясняем действием: сколько нот успеть, куда попадает каждая и что при
+ * этом происходит со счётом (а со счётом не происходит ничего).
+ */
+function insideCountHint(onsets: number, label: string): string {
+  const between = onsets === 2
+    ? `вторая — ровно посередине, между «${label}» и следующим слогом`
+    : `остальные — поровну делят время до следующего слога`;
+  return `Как считать: слог «${label}» говори в прежнем темпе, `
+    + `а внутри него успей ${onsets} ${noteWord(onsets)} подряд. `
+    + `Первая — точно на слог, ${between}. Быстрее играют пальцы, а не счёт.`;
+}
+
 function handCellTooltip(
   cell: RhythmCountItem,
   hand: FingeringHand,
 ): Pick<PositionedRhythmCellTooltip, "count" | "hand" | "action" | "facts"> {
   const state = cell.handStates[hand];
   const handName = hand === "right" ? "Правая рука · верхний стан" : "Левая рука · нижний стан";
+  /*
+   * Несколько нот подряд и несколько нот вместе — разные действия, и раньше
+   * обе ситуации подписывались как «взять одновременно N ноты». Для двух
+   * шестнадцатых подряд это прямо неверная инструкция.
+   */
+  const attackAction = state.attackOnsets > 1
+    ? state.attackNotes > state.attackOnsets
+      ? `сыграть ${state.attackOnsets} созвучия подряд на один слог`
+      : `сыграть ${state.attackOnsets} ${noteWord(state.attackOnsets)} подряд на один слог`
+    : state.attackNotes > 1
+      ? `взять ${state.attackNotes} ${noteWord(state.attackNotes)} вместе, одним движением`
+      : "взять новую ноту";
   const action = state.kind === "attack"
     ? [
         state.heldNotes
-          ? `продолжать держать ${state.heldNotes} ${state.heldNotes === 1 ? "ноту" : "ноты"}`
+          ? `продолжать держать ${state.heldNotes} ${noteWord(state.heldNotes)}`
           : "",
-        state.attackNotes > 1
-          ? `взять одновременно ${state.attackNotes} ноты`
-          : "взять новую ноту",
+        attackAction,
       ].filter(Boolean).join(" и ")
     : state.kind === "hold"
       ? "продолжать держать звук"
@@ -2632,13 +2793,16 @@ function handCellTooltip(
     action,
     facts: [
       state.attackOnsets > 1
-        ? `${state.attackOnsets} последовательные атаки внутри позиции`
+        ? insideCountHint(state.attackOnsets, cell.syllable)
+        : "",
+      state.attackOnsets <= 1 && state.attackNotes > 1
+        ? "Ноты стоят друг над другом — нажимай их в один момент, а не по очереди."
         : "",
       state.staccatoAttacks
         ? "Staccato · сыграть коротко и отпустить"
         : "",
       state.durations.length
-        ? `Нотированная длительность · ${state.durations.join(" / ")}`
+        ? `В нотах записано · ${state.durations.join(" / ")}`
         : "",
     ].filter(Boolean),
   };
@@ -2692,6 +2856,22 @@ const rhythmActionHints = computed(() => {
   if (kinds.has("attack")) hints.push({ kind: "attack", mark: "●", text: "сыграй ноту" });
   if (kinds.has("hold")) hints.push({ kind: "hold", mark: "─", text: "продолжай держать" });
   if (kinds.has("rest")) hints.push({ kind: "rest", mark: "○", text: "пауза — не играй" });
+  // Чип с числом — самый непонятный знак схемы, объясняем его прямо в легенде.
+  const maxOnsets = states.reduce((max, state) => Math.max(max, state.attackOnsets), 0);
+  if (maxOnsets > 1) {
+    hints.push({
+      kind: "sequence",
+      mark: `${maxOnsets}×`,
+      text: "столько нот подряд на один слог — счёт не ускоряется",
+    });
+  }
+  if (states.some((state) => state.attackOnsets <= 1 && state.attackNotes > 1)) {
+    hints.push({
+      kind: "chord",
+      mark: "2",
+      text: "столько нот нажимай вместе, одним движением",
+    });
+  }
   return hints;
 });
 
@@ -2727,6 +2907,16 @@ const focusedMeasureIndex = computed(
  */
 type DetailLayout = "line" | "stack"; // changed: два формата вместо одного
 const detailLayout = ref<DetailLayout>("line");
+/**
+ * До 720px «в линию» не помещается физически: пять тактов по шесть позиций
+ * дают полосу в несколько экранов. Там формат всегда столбик — и разметка, и
+ * подписи на клетках должны знать реальный формат, а не выбранный, иначе на
+ * телефоне остались бы обрубки подписей от узких колонок.
+ */
+const narrowViewport = ref(false); // changed: один источник правды о формате
+const effectiveDetailLayout = computed<DetailLayout>(
+  () => (narrowViewport.value ? "stack" : detailLayout.value),
+);
 /** Заголовок разбора: «Такт 4» для одиночного окна и «Такты 3–7» для отрезка. */
 const detailRangeLabel = computed(() => {
   const rows = detailedRhythmRows.value;
@@ -2735,6 +2925,104 @@ const detailRangeLabel = computed(() => {
   const last = rows[rows.length - 1].label;
   return rows.length > 1 ? `Такты ${first}–${last}` : `Такт ${first}`;
 }); // changed: диапазон вместо одного номера
+/**
+ * Сколько всего позиций счёта в отрезке. В формате «в линию» из этого числа
+ * CSS считает ширину клетки и подбирает под неё кегль: слог обязан ужиматься
+ * вместе с колонкой, иначе «Раз» упирается в тактовую черту.
+ */
+const lineCellTotal = computed(() =>
+  detailedRhythmRows.value.reduce(
+    (total, row) => total + Math.max(1, row.cells.length),
+    0,
+  ),
+); // changed: ширина клетки известна CSS
+/** Ширина колонки подписей рук в формате «в линию»; та же в --rhythm-line-labels. */
+const LINE_LABELS_WIDTH = 78;
+const detailStripWidth = ref(0);
+/**
+ * Строка счёта в линию: что печатать и каким кеглем. Клетка там узкая, а кегль
+ * ниже 11px не опускается, поэтому «Четыре» в неё физически не влезает и
+ * наезжает на соседнее «и». Решение принимается один раз на весь отрезок:
+ * вперемешку «Раз / Два / Три / 4» читалось бы как сбой, а не как сокращение.
+ *
+ * Кегль считается от того текста, который реально печатается. Иначе цифра
+ * доли оставалась бы на полу 11px в клетке, где помещается 20px, — счёт
+ * читался бы мелким без всякой причины.
+ */
+let countTextContext: CanvasRenderingContext2D | null | undefined;
+/**
+ * Линейка строки счёта: меряет слог тем же шрифтом, которым он будет нарисован.
+ * Семейство читаем из токена `--display` один раз на замер, а не на каждый
+ * вызов: getComputedStyle внутри цикла подбора кегля стоил бы дороже пользы.
+ */
+function countTextRuler(): (text: string, font: number) => number {
+  if (countTextContext === undefined) {
+    countTextContext = document.createElement("canvas").getContext("2d");
+  }
+  const context = countTextContext;
+  const host = rhythmDetailMeasures.value;
+  const family = host
+    ? getComputedStyle(host).getPropertyValue("--display").trim() || "sans-serif"
+    : "sans-serif";
+  return (text, font) => {
+    // Без canvas берём заведомо широкую оценку: лучше цифра, чем обрезанное слово.
+    if (!context) return text.length * font;
+    context.font = `800 ${font}px ${family}`;
+    return context.measureText(text).width;
+  };
+}
+
+/** Самые длинные слоги отрезка и номер последней доли — вход для линейки. */
+const lineCountSource = computed(() => {
+  let pulseWord = "";
+  let offbeatSyllable = "";
+  let lastPulse = 1;
+  for (const row of detailedRhythmRows.value) {
+    for (const item of row.cells) {
+      const syllable = item.cell.syllable;
+      if (item.cell.pulseStart) {
+        if (syllable.length > pulseWord.length) pulseWord = syllable;
+        lastPulse = Math.max(lastPulse, item.cell.pulse);
+      } else if (syllable.length > offbeatSyllable.length) {
+        offbeatSyllable = syllable;
+      }
+    }
+  }
+  return { pulseWord, offbeatSyllable, lastPulse };
+});
+
+const lineMinCell = computed(() =>
+  lineMinCellWidth(lineCountSource.value.lastPulse, countTextRuler()),
+);
+
+/**
+ * Фактическая ширина одной позиции счёта. Ниже минимума не опускается: на этой
+ * границе полоса начинает прокручиваться, а не сжимать клетку дальше.
+ */
+const lineCellWidth = computed(() =>
+  Math.max(
+    lineMinCell.value,
+    (detailStripWidth.value - LINE_LABELS_WIDTH) / Math.max(1, lineCellTotal.value),
+  ),
+);
+
+const lineCountMetrics = computed(() =>
+  lineCountLayout({
+    cellWidth: lineCellWidth.value,
+    pulseWord: lineCountSource.value.pulseWord,
+    offbeatSyllable: lineCountSource.value.offbeatSyllable,
+    lastPulse: lineCountSource.value.lastPulse,
+    measureText: countTextRuler(),
+  }),
+);
+/** Слог доли: слово, если оно влезает, иначе номер доли; половина — точка. */
+function rhythmSpokenText(cell: RhythmCountItem): string {
+  if (effectiveDetailLayout.value !== "line") return cell.syllable;
+  if (cell.pulseStart) {
+    return lineCountMetrics.value.words ? cell.syllable : String(cell.pulse);
+  }
+  return lineCountMetrics.value.offbeats ? cell.syllable : "·";
+}
 const playheadCountLabel = computed(
   () => windowCells.value[activeCellIndex.value]?.cell.label ?? "",
 );
@@ -3078,12 +3366,12 @@ function handCellAriaLabel(cell: RhythmCountItem, hand: FingeringHand): string {
   const state = cell.handStates[hand];
   const handName = hand === "right" ? "правая рука" : "левая рука";
   const detail = state.attackOnsets > 1
-    ? `, ${state.attackOnsets} последовательные атаки`
+    ? `, ${state.attackOnsets} ${noteWord(state.attackOnsets)} подряд на один слог`
     : state.attackNotes > 1
-      ? `, аккорд из ${state.attackNotes} нот`
+      ? `, ${state.attackNotes} ${noteWord(state.attackNotes)} вместе`
       : "";
   const held = state.kind === "attack" && state.heldNotes
-    ? `, продолжая держать ${state.heldNotes} ${state.heldNotes === 1 ? "ноту" : "ноты"}`
+    ? `, продолжая держать ${state.heldNotes} ${noteWord(state.heldNotes)}`
     : "";
   return `${cell.label}, ${handName}: ${CELL_ROLE_LABELS[state.kind]}${detail}${held}`;
 }
@@ -3952,8 +4240,35 @@ function onVisibilityChange(): void {
   if (document.hidden) stopPlayback();
 }
 
+const narrowViewportQuery = window.matchMedia("(max-width: 720px)"); // changed
+function syncNarrowViewport(): void {
+  narrowViewport.value = narrowViewportQuery.matches;
+}
+
+/*
+ * Ширину полосы меряем, а не угадываем: от неё зависит, помещается ли в клетку
+ * слово счёта. Контейнерных запросов здесь мало — решение нужно и в разметке
+ * (какой текст печатать), а не только в CSS.
+ */
+let detailStripObserver: ResizeObserver | undefined; // changed
+watch(rhythmDetailMeasures, (host) => {
+  detailStripObserver?.disconnect();
+  detailStripObserver = undefined;
+  if (!host) {
+    detailStripWidth.value = 0;
+    return;
+  }
+  detailStripWidth.value = host.clientWidth;
+  detailStripObserver = new ResizeObserver((entries) => {
+    detailStripWidth.value = entries.at(-1)?.contentRect.width ?? 0;
+  });
+  detailStripObserver.observe(host);
+});
+
 onMounted(() => {
   updateLearningMeasure();
+  syncNarrowViewport(); // changed
+  narrowViewportQuery.addEventListener("change", syncNarrowViewport); // changed
   document.addEventListener("visibilitychange", onVisibilityChange);
   resizeObserver = new ResizeObserver((entries) => {
     const width = entries.at(-1)?.contentRect.width ?? 0;
@@ -3981,6 +4296,8 @@ onBeforeUnmount(() => {
   requestVersion += 1;
   stopPlayback();
   player.dispose();
+  narrowViewportQuery.removeEventListener("change", syncNarrowViewport); // changed
+  detailStripObserver?.disconnect(); // changed
   document.removeEventListener("visibilitychange", onVisibilityChange);
   teardownNoteInteractions();
   resizeObserver?.disconnect();
@@ -4217,9 +4534,11 @@ onBeforeUnmount(() => {
               линия — продолжай держать.
               <b v-if="detailedRhythmRows.length > 1">
                 {{
-                  detailLayout === "line"
-                    ? "Такты стоят рядом, как в нотном стане: считай слева направо через тактовые черты."
-                    : "Такты идут друг под другом: доли выстроены в одну колонку, счёт читается сверху вниз."
+                  effectiveDetailLayout !== "line"
+                    ? "Такты идут друг под другом: доли выстроены в одну колонку, счёт читается сверху вниз."
+                    : lineCountMetrics.words
+                      ? "Такты стоят рядом, как в нотном стане: считай слева направо через тактовые черты."
+                      : "Такты стоят рядом, как в нотном стане. Отрезок узкий, поэтому доля показана номером — полные слоги есть в формате «в столбик»."
                 }}
               </b>
             </p>
@@ -4257,7 +4576,13 @@ onBeforeUnmount(() => {
           <div
             ref="rhythmDetailMeasures"
             class="rhythm-detail-measures"
-            :class="`is-${detailLayout}`"
+            :class="`is-${effectiveDetailLayout}`"
+            :style="{
+              '--rhythm-line-cell': `${Math.round(lineCellWidth)}px`,
+              '--rhythm-line-min-cell': `${lineMinCell}px`,
+              '--rhythm-line-font-pulse': `${lineCountMetrics.pulseFont}px`,
+              '--rhythm-line-font-beat': `${lineCountMetrics.offbeatFont}px`,
+            }"
           >
             <section
               v-for="(row, rowIndex) in detailedRhythmRows"
@@ -4280,6 +4605,7 @@ onBeforeUnmount(() => {
                   class="rhythm-measure-detail-pick"
                   :aria-pressed="row.index === activeMeasureIndex"
                   :aria-label="`Разбирать такт ${row.label}`"
+                  :title="`Выбрать такт ${row.label} для разбора`"
                   @click="selectActiveMeasure(row.index)"
                 >
                   <small>Такт</small>
@@ -4293,7 +4619,7 @@ onBeforeUnmount(() => {
                 :class="{ 'is-live': playing && row.index === focusedMeasureIndex }"
               >
                 <div
-                  v-if="detailLayout === 'stack' || rowIndex === 0"
+                  v-if="effectiveDetailLayout === 'stack' || rowIndex === 0"
                   class="rhythm-detail-labels"
                 >
                   <span aria-hidden="true"><b>Скажи</b><small>вслух ровно</small></span>
@@ -4305,6 +4631,7 @@ onBeforeUnmount(() => {
                     :class="[`is-${hand}`, { 'is-off': !playbackHands[hand] }]"
                     :aria-pressed="playbackHands[hand]"
                     :aria-label="`${playbackHands[hand] ? 'Отключить' : 'Включить'} ${hand === 'right' ? 'правую' : 'левую'} руку в проигрывании`"
+                    :title="`${playbackHands[hand] ? 'Отключить' : 'Включить'} эту руку в проигрывании`"
                     @click="togglePlaybackHand(hand)"
                   >
                     <i aria-hidden="true">{{ playbackHands[hand] ? "●" : "○" }}</i>
@@ -4335,7 +4662,7 @@ onBeforeUnmount(() => {
                             && windowCells[activeCellIndex]?.globalQuarters === item.globalQuarters,
                         }"
                       >
-                        {{ item.cell.syllable }}
+                        {{ rhythmSpokenText(item.cell) }}
                       </b>
                     </div>
 
@@ -4384,21 +4711,14 @@ onBeforeUnmount(() => {
                           {{ rhythmHandMark(item.cell.handStates[hand]) }}
                         </i>
                         <em
-                          v-if="
-                            item.cell.handStates[hand].attackOnsets > 1
-                            || item.cell.handStates[hand].attackNotes > 1
-                          "
+                          v-if="rhythmCellCountLabel(item.cell.handStates[hand])"
                           class="rhythm-cell-count"
                           :class="{
                             'is-sequence': item.cell.handStates[hand].attackOnsets > 1,
                           }"
                           aria-hidden="true"
                         >
-                          {{
-                            item.cell.handStates[hand].attackOnsets > 1
-                              ? `${item.cell.handStates[hand].attackOnsets} атаки`
-                              : `аккорд · ${item.cell.handStates[hand].attackNotes}`
-                          }}
+                          {{ rhythmCellCountLabel(item.cell.handStates[hand]) }}
                         </em>
                       </span>
                     </div>
@@ -4407,6 +4727,14 @@ onBeforeUnmount(() => {
               </div>
             </section>
           </div>
+
+          <p class="rhythm-detail-legend">
+            <span><b>Наведи на клетку</b> — подскажу, что играть и как считать.</span>
+            <span v-if="detailedRhythmRows.length > 1">
+              <b>Номер такта</b> наверху выбирает такт для разбора.
+            </span>
+            <span><b>Подпись руки</b> слева включает и выключает её в проигрывании.</span>
+          </p>
         </section>
 
         <ul v-if="rhythmCoachNotes.length" class="rhythm-coach-notes">
@@ -5051,6 +5379,24 @@ onBeforeUnmount(() => {
   color: #a76f22;
 }
 
+/* Чипы в легенде выглядят ровно так же, как на клетках счёта. */
+.rhythm-action-key .is-sequence b,
+.rhythm-action-key .is-chord b { /* changed */
+  min-width: 0;
+  padding: 1px 5px;
+  border-radius: 999px;
+}
+
+.rhythm-action-key .is-sequence b {
+  background: #e7eefc;
+  color: #2b58a6;
+}
+
+.rhythm-action-key .is-chord b {
+  background: #fff5e4;
+  color: #b07a2c;
+}
+
 .rhythm-audio-error {
   margin: 10px 0 0;
   padding: 10px 12px;
@@ -5066,7 +5412,24 @@ onBeforeUnmount(() => {
 .rhythm-hand-cell {
   z-index: 1;
   min-height: 34px;
+  /*
+   * Клетка счёта ничего не меняет — она объясняет. Курсор-вопрос отличает её
+   * от кнопок: у номера такта и подписи руки курсор-палец, потому что они
+   * действительно переключают состояние.
+   */
+  cursor: help;
   color: #aab4c8;
+}
+
+/* Выключенная рука не отвечает на наведение — курсор не должен обещать иное. */
+.rhythm-hand-subgrid.is-muted .rhythm-hand-cell {
+  cursor: default;
+}
+
+/* Строка слогов и шапка подписей — текст, а не контрол. */
+.rhythm-spoken-subgrid,
+.rhythm-detail-labels > span {
+  cursor: default;
 }
 
 /*
@@ -5152,6 +5515,12 @@ onBeforeUnmount(() => {
   box-shadow: inset 0 0 0 1px rgba(31, 87, 209, 0.28);
 }
 
+/* С клавиатуры клетки обходят табом — рамка обязана быть видна и без мыши. */
+.rhythm-hand-cell:focus-visible {
+  outline: 2px solid #2762d8;
+  outline-offset: -2px;
+}
+
 .rhythm-cell-count {
   position: absolute;
   top: 1px;
@@ -5165,6 +5534,15 @@ onBeforeUnmount(() => {
   text-align: center;
   font: 800 var(--text-caption)/1 var(--mono);
   font-style: normal;
+}
+
+/*
+ * Аккорд (звуки берутся вместе) и цепочка атак — разные вещи. В линию от
+ * подписи остаётся одно число, поэтому различать их обязан цвет, а не текст.
+ */
+.rhythm-cell-count.is-sequence { /* changed */
+  background: #e7eefc;
+  color: #2b58a6;
 }
 
 /* Окно 1/3/5 — навигация, а не пять ужатых учебных таблиц. */
@@ -5385,47 +5763,236 @@ onBeforeUnmount(() => {
  * линией, а не разваливается на столбик.
  */
 .rhythm-detail-measures.is-line { /* changed: новый формат разбора */
+  /*
+   * Колонка подписей и высоты строк в линию свои: пять тактов по шесть
+   * позиций — это линейка, а не учебная таблица, поэтому всё плотнее.
+   * --rhythm-line-cell — ширина одной позиции счёта. Из неё считается кегль,
+   * поэтому слог ужимается вместе с колонкой, а не упирается в тактовую черту.
+   */
+  /* Значение --rhythm-line-cell приходит из разметки: ширину полосы меряет
+     ResizeObserver, потому что тот же размер нужен и для выбора текста. */
+  --rhythm-line-labels: 78px;
   display: flex;
   align-items: stretch;
   gap: 0;
   padding-bottom: 4px;
   overflow-x: auto;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+}
+
+/* Полоса прокрутки не должна съедать высоту строки счёта. */
+.rhythm-detail-measures.is-line::-webkit-scrollbar {
+  height: 8px;
+}
+
+.rhythm-detail-measures.is-line::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rhythm-detail-measures.is-line::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(70, 107, 183, 0.28);
 }
 
 .rhythm-detail-measures.is-line > .rhythm-measure-detail {
   /* Ширина такта пропорциональна числу позиций счёта, а не «поровну»: такт
      на 6 позиций не должен быть уже такта на 4. */
   flex: var(--rhythm-measure-cells, 1) 1 0;
-  min-width: calc(var(--rhythm-measure-cells, 1) * 38px);
+  /* Минимум приходит из разметки: в клетку обязан помещаться номер доли,
+     а он у 12/8 двузначный. Ниже этой границы полоса прокручивается. */
+  min-width: calc(var(--rhythm-measure-cells, 1) * var(--rhythm-line-min-cell, 18px));
   padding: 0;
   border-radius: 0;
+  scroll-snap-align: start;
+}
+
+/* Тактовая черта идёт через всю систему — вместе со строкой номеров. */
+.rhythm-detail-measures.is-line
+  > .rhythm-measure-detail
+  + .rhythm-measure-detail {
+  border-left: 2px solid rgba(45, 84, 160, 0.32);
 }
 
 .rhythm-detail-measures.is-line > .rhythm-measure-detail:first-child {
-  /* Подписи рук живут внутри первого такта. Их 96 px добавляем сверх доли,
+  /* Подписи рук живут внутри первого такта. Их ширину добавляем сверх доли,
      иначе первый такт оказался бы уже соседей ровно на эту колонку. */
-  flex-basis: 96px;
-  min-width: calc(96px + var(--rhythm-measure-cells, 1) * 38px);
+  flex-basis: var(--rhythm-line-labels);
+  min-width: calc(
+    var(--rhythm-line-labels)
+    + var(--rhythm-measure-cells, 1) * var(--rhythm-line-min-cell, 18px)
+  );
 }
 
+/* --- Линейка: высоты строк и кегль считаются от ширины позиции счёта --- */
+
+.rhythm-detail-measures.is-line .rhythm-detail-labels,
+.rhythm-detail-measures.is-line .rhythm-beat-column {
+  grid-template-rows: 30px 40px 40px;
+}
+
+.rhythm-detail-measures.is-line .rhythm-hand-cell {
+  min-height: 40px;
+}
+
+.rhythm-detail-measures.is-line
+  > .rhythm-measure-detail:first-child
+  .rhythm-detail-grid {
+  grid-template-columns: var(--rhythm-line-labels) minmax(0, 1fr);
+}
+
+.rhythm-detail-measures.is-line .rhythm-detail-labels span,
+.rhythm-detail-measures.is-line .rhythm-hand-label-toggle {
+  padding-inline: 8px;
+}
+
+/*
+ * Пол кегля в проекте — 11px, мельче подписи не делаем. Поэтому в линию
+ * колонка обходится без вторых строк: «верхний стан» при 11px не влезает в
+ * 78px и переносился бы обрубком. Расшифровка остаётся в столбике и в
+ * подсказке по наведению, где для неё есть место.
+ */
+.rhythm-detail-measures.is-line .rhythm-detail-labels small {
+  display: none;
+}
+
+.rhythm-detail-measures.is-line .rhythm-detail-labels b {
+  font-size: var(--text-caption);
+}
+
+.rhythm-detail-measures.is-line .rhythm-hand-label-toggle {
+  gap: 5px;
+}
+
+.rhythm-detail-measures.is-line .rhythm-hand-label-toggle > i {
+  width: 11px;
+  font-size: var(--text-caption);
+}
+
+/*
+ * Доля и её половина различаются кеглем и цветом: без этого «Раз и Два и Три и»
+ * читается одной строкой и посчитать по ней нельзя.
+ */
+.rhythm-detail-measures.is-line .rhythm-spoken-subgrid b {
+  /* Страховка от наезда на соседнюю клетку: расчёт в разметке консервативный,
+     но выйти за свои границы слог не должен ни при какой ошибке в оценке. */
+  overflow: hidden;
+  color: #97a6c2;
+  /* Кегли приходят из разметки: она знает и ширину клетки, и печатаемый текст,
+     поэтому подбирает максимум, который влезает, а не фиксированную ступень. */
+  font-size: var(--rhythm-line-font-beat, var(--text-caption));
+  font-weight: 700;
+}
+
+.rhythm-detail-measures.is-line .rhythm-spoken-subgrid b.is-pulse {
+  color: #1b4ca9;
+  font-size: var(--rhythm-line-font-pulse, var(--text-section));
+  font-weight: 800;
+}
+
+/*
+ * Пунктирная рамка «здесь тесно» в линию только шумит: клетка и так узкая, а
+ * про несколько нот подряд теперь прямо говорят чип и легенда.
+ */
+.rhythm-detail-measures.is-line .rhythm-hand-cell.is-crowded {
+  outline: none;
+}
+
+.rhythm-detail-measures.is-line .rhythm-cell-mark {
+  min-width: 11px;
+  padding: 1px;
+}
+
+/* Подпись на клетке в линию — только число, поэтому чип узкий. */
+.rhythm-detail-measures.is-line .rhythm-cell-count {
+  top: 1px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 2px;
+  letter-spacing: 0;
+}
+
+/*
+ * Подсветка выбранного такта — как у выбранной вкладки: мягкая заливка
+ * колонки плюс акцентная черта под номером. Плоская заливка сама по себе не
+ * говорила, что такт выбран кликом, а не просто подкрашен.
+ */
 .rhythm-detail-measures.is-line > .rhythm-measure-detail.is-focused {
-  background: rgba(226, 236, 255, 0.72);
+  background: linear-gradient(
+    180deg,
+    rgba(219, 232, 255, 0.92),
+    rgba(240, 246, 255, 0.55)
+  );
   box-shadow: none;
 }
 
 .rhythm-detail-measures.is-line .rhythm-measure-detail-title {
-  /* Фиксированная высота строки номеров: чип «сейчас» не должен сдвигать
-     сетку соседних тактов относительно текущего. */
-  min-height: 30px;
-  padding: 0 8px 6px;
+  /* Номер центрируется над долями своего такта: у первого такта колонку
+     подписей исключаем отступом, иначе он уезжает влево от своей сетки. */
+  justify-content: center;
+  min-height: 26px;
+  gap: 6px;
+  padding: 0 6px 5px;
+  border-bottom: 2px solid transparent;
   white-space: nowrap;
+  transition: border-color 160ms ease;
+}
+
+.rhythm-detail-measures.is-line
+  > .rhythm-measure-detail.is-focused
+  .rhythm-measure-detail-title {
+  border-bottom-color: rgba(39, 98, 216, 0.85);
+}
+
+/* Под бегунком акцент красный — тот же цвет, что у активной доли и чипа. */
+.rhythm-detail-measures.is-line
+  > .rhythm-measure-detail.is-live
+  .rhythm-measure-detail-title {
+  border-bottom-color: #e53935;
+}
+
+.rhythm-detail-measures.is-line .rhythm-measure-detail-title strong {
+  font-size: var(--text-label);
+}
+
+.rhythm-detail-measures.is-line .rhythm-measure-detail-pick {
+  gap: 5px;
+  padding: 1px 7px;
+}
+
+/* Выбор такта показывает черта под номером — заливка кнопки была бы вторым
+   индикатором того же самого. */
+.rhythm-detail-measures.is-line
+  .rhythm-measure-detail-pick[aria-pressed="true"] {
+  background: transparent;
+}
+
+.rhythm-detail-measures.is-line
+  > .rhythm-measure-detail.is-focused
+  .rhythm-measure-detail-pick small,
+.rhythm-detail-measures.is-line
+  > .rhythm-measure-detail.is-focused
+  .rhythm-measure-detail-pick strong {
+  color: #1b4ca9;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  /* Наведение работает и на уже выбранном такте: иначе он выглядит
+     неинтерактивным ровно там, где кликать хочется чаще всего. */
+  .rhythm-detail-measures.is-line .rhythm-measure-detail-pick:hover {
+    background: rgba(39, 98, 216, 0.12);
+  }
+}
+
+.rhythm-detail-measures.is-line .rhythm-measure-detail-title em {
+  margin-left: 0;
+  padding: 2px 6px;
 }
 
 .rhythm-detail-measures.is-line
   > .rhythm-measure-detail:first-child
   .rhythm-measure-detail-title {
-  /* Номер встаёт над первой долей такта, а не над колонкой подписей. */
-  padding-left: 104px;
+  padding-left: calc(var(--rhythm-line-labels) + 6px);
 }
 
 .rhythm-detail-measures.is-line .rhythm-measure-detail-title i {
@@ -5456,17 +6023,10 @@ onBeforeUnmount(() => {
   border-radius: 0 12px 12px 0;
 }
 
-/* Тактовая черта: граница между тактами заметно толще деления долей. */
-.rhythm-detail-measures.is-line
-  > .rhythm-measure-detail
-  + .rhythm-measure-detail
-  .rhythm-detail-grid {
-  border-left: 2px solid rgba(45, 84, 160, 0.4);
-}
 
-.rhythm-detail-measures.is-line .rhythm-spoken-subgrid b {
-  /* В линию колонка доли уже, чем в столбик: слог ужимается, но не режется. */
-  font-size: clamp(13px, 1vw, 20px);
+/* Деление долей внутри такта заметнее, чем деление половинок доли. */
+.rhythm-detail-measures.is-line .rhythm-beat-column {
+  border-left-color: rgba(54, 94, 173, 0.3);
 }
 
 .rhythm-detail-head {
@@ -5507,6 +6067,25 @@ onBeforeUnmount(() => {
   margin: 0;
   color: #6e7f9e;
   font: 500 var(--text-label)/1.45 var(--ui);
+}
+
+/*
+ * Что кликается — не должно быть находкой. Строка перечисляет ровно три
+ * интерактивных места схемы; всё остальное в ней читают, а не нажимают.
+ */
+.rhythm-detail-legend { /* changed */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 10px 0 0;
+  padding: 0 2px;
+  color: #8292b0;
+  font: 500 var(--text-caption)/1.4 var(--ui);
+}
+
+.rhythm-detail-legend b {
+  color: #4a6299;
+  font-weight: 750;
 }
 
 .rhythm-detail-head p b { /* changed: подсказка про сквозной счёт по отрезку */
@@ -6182,58 +6761,12 @@ onBeforeUnmount(() => {
   }
 
   /*
-   * На телефоне «в линию» физически не помещается: пять тактов по шесть
-   * позиций дают полосу в несколько экранов. Формат принудительно сводим к
-   * столбику и прячем переключатель, чтобы не предлагать нерабочий выбор.
+   * Переключатель формата на телефоне не нужен: effectiveDetailLayout здесь
+   * всегда «stack», поэтому вся раскладка «в линию» просто не применяется —
+   * сбрасывать её отдельными правилами не требуется.
    */
   .rhythm-detail-layout { /* changed */
     display: none;
-  }
-
-  .rhythm-detail-measures.is-line { /* changed */
-    display: grid;
-    gap: 12px;
-    padding-bottom: 0;
-    overflow-x: visible;
-  }
-
-  .rhythm-detail-measures.is-line > .rhythm-measure-detail,
-  .rhythm-detail-measures.is-line > .rhythm-measure-detail:first-child {
-    flex: none;
-    min-width: 0;
-    padding: 4px 4px 6px;
-    border-radius: 14px;
-  }
-
-  .rhythm-detail-measures.is-line .rhythm-measure-detail-title,
-  .rhythm-detail-measures.is-line
-    > .rhythm-measure-detail:first-child
-    .rhythm-measure-detail-title {
-    padding: 6px 4px;
-    white-space: normal;
-  }
-
-  .rhythm-detail-measures.is-line .rhythm-measure-detail-title i {
-    display: block;
-  }
-
-  .rhythm-detail-measures.is-line .rhythm-detail-grid,
-  .rhythm-detail-measures.is-line
-    > .rhythm-measure-detail
-    + .rhythm-measure-detail
-    .rhythm-detail-grid,
-  .rhythm-detail-measures.is-line
-    > .rhythm-measure-detail:first-child
-    .rhythm-detail-grid,
-  .rhythm-detail-measures.is-line
-    > .rhythm-measure-detail:last-child
-    .rhythm-detail-grid {
-    border: 0;
-    border-radius: 0;
-  }
-
-  .rhythm-detail-measures.is-line .rhythm-spoken-subgrid b {
-    font-size: clamp(var(--text-section), 1.35vw, 20px);
   }
 
   .rhythm-measure-detail {

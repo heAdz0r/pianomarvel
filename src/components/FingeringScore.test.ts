@@ -43,6 +43,22 @@ interface FingeringScoreHelpers {
     span: number,
     total: number,
   ) => { from: number; to: number };
+  lineMinCellWidth: (
+    lastPulse: number,
+    measureText: (text: string, font: number) => number,
+  ) => number;
+  lineCountLayout: (input: {
+    cellWidth: number;
+    pulseWord: string;
+    offbeatSyllable: string;
+    lastPulse: number;
+    measureText: (text: string, font: number) => number;
+  }) => {
+    words: boolean;
+    offbeats: boolean;
+    pulseFont: number;
+    offbeatFont: number;
+  };
   countSpanAt: (
     cells: Array<{
       offsetQuarters: number;
@@ -141,6 +157,8 @@ async function loadPureHelpers(): Promise<FingeringScoreHelpers> {
       countSpanAt,
       groupSharedUnisonTargets,
       mergeFingeringNoteFacts,
+      lineCountLayout,
+      lineMinCellWidth,
       measureWindowRange,
       parseMeasureLearning,
       pickNoteheadByIndex,
@@ -722,6 +740,112 @@ describe("FingeringScore: окно показа тактов", () => {
   test("короткая партитура не выходит за свои границы", () => {
     expect(window(1, 5, 2)).toEqual({ from: 1, to: 2 });
     expect(window(1, 3, 0)).toEqual({ from: 1, to: 1 });
+  });
+});
+
+describe("FingeringScore: строка счёта в формате «в линию»", () => {
+  /**
+   * Наборный шрифт счёта широкий: знак занимает около 0.85 кегля. Именно из-за
+   * заниженной оценки в 0.58 «Два» обрезалось до «Дв» на экране, поэтому в
+   * продакшене ширину меряет canvas, а тест подставляет ту же пропорцию.
+   */
+  const measureText = (text: string, font: number) => text.length * font * 0.85;
+  const layout = (
+    cellWidth: number,
+    pulseWord: string,
+    offbeatSyllable: string,
+    lastPulse = 4,
+  ) =>
+    helpers.lineCountLayout({
+      cellWidth,
+      pulseWord,
+      offbeatSyllable,
+      lastPulse,
+      measureText,
+    });
+
+  /** Слово влезает в клетку тем кеглем, который вернул расчёт. */
+  const fitsInCell = (text: string, font: number, cellWidth: number) =>
+    measureText(text, font) <= cellWidth - 6;
+
+  test("в широкой клетке доля названа словом целиком", () => {
+    // Один такт на всю полосу: «Четыре» помещается с запасом.
+    const wide = layout(110, "Четыре", "и");
+    expect(wide.words).toBe(true);
+    expect(wide.offbeats).toBe(true);
+  });
+
+  test("пять тактов 4/4 — слово не влезает, доля показана номером", () => {
+    // Полоса ≈ 970px, колонка подписей 78px, 40 позиций счёта → ≈ 22px клетка.
+    const tight = layout(22, "Четыре", "и");
+    expect(tight.words).toBe(false);
+    expect(tight.offbeats).toBe(true);
+  });
+
+  test("пять тактов 6/8 — «Два» не обрезается, а уступает место цифре", () => {
+    // 30 позиций счёта на той же полосе → ≈ 30px клетка. Именно здесь «Два»
+    // печаталось поверх соседнего «и».
+    const compound = layout(30, "Два", "и", 2);
+    expect(compound.words).toBe(false);
+    expect(fitsInCell(String(2), compound.pulseFont, 30)).toBe(true);
+  });
+
+  test("двузначный номер доли расширяет минимальную клетку", () => {
+    // 12/8: «12» на полу кегля шире 18px, поэтому минимум обязан вырасти.
+    expect(helpers.lineMinCellWidth(12, measureText))
+      .toBeGreaterThan(helpers.lineMinCellWidth(4, measureText));
+  });
+
+  test("что печатается — то и влезает в клетку при любой геометрии", () => {
+    for (const lastPulse of [4, 12]) {
+      const minCell = helpers.lineMinCellWidth(lastPulse, measureText);
+      for (const requested of [0, 12, 18, 22, 30, 45, 60, 90, 111, 200]) {
+        // Разметка никогда не рисует клетку уже минимума: там полоса скроллится.
+        const cellWidth = Math.max(minCell, requested);
+        for (const word of ["Раз", "Два", "Четыре", "Одиннадцать"]) {
+          const step = layout(cellWidth, word, "оль", lastPulse);
+          const pulseText = step.words ? word : String(lastPulse);
+          const offbeatText = step.offbeats ? "оль" : "·";
+          expect(fitsInCell(pulseText, step.pulseFont, cellWidth)).toBe(true);
+          expect(fitsInCell(offbeatText, step.offbeatFont, cellWidth)).toBe(true);
+        }
+      }
+    }
+  });
+
+  test("половина доли никогда не крупнее доли ни при какой геометрии", () => {
+    for (const cellWidth of [0, 12, 18, 22, 30, 45, 60, 111]) {
+      for (const word of ["Раз", "Четыре", "Одиннадцать"]) {
+        const step = layout(cellWidth, word, "и");
+        expect(step.offbeatFont).toBeLessThanOrEqual(step.pulseFont);
+      }
+    }
+  });
+
+  test("слово печатается только читаемым кеглем, иначе крупная цифра", () => {
+    // В клетке 45px «Четыре» пришлось бы набирать одиннадцатым — цифра лучше.
+    expect(layout(45, "Четыре", "и").words).toBe(false);
+    expect(layout(90, "Четыре", "и").words).toBe(true);
+  });
+
+  test("на плотной сетке половина доли уходит в точку", () => {
+    const dense = layout(14, "Четыре", "оль");
+    expect(dense.words).toBe(false);
+    expect(dense.offbeats).toBe(false);
+  });
+
+  test("кегль не опускается ниже пола в 11px ни при какой ширине", () => {
+    for (const cellWidth of [0, 5, 12, 18, 22, 40, 120]) {
+      const step = layout(cellWidth, "Четыре", "оль");
+      expect(step.pulseFont).toBeGreaterThanOrEqual(11);
+      expect(step.offbeatFont).toBeGreaterThanOrEqual(11);
+    }
+  });
+
+  test("двузначная доля получает свою ширину, а не ширину единицы", () => {
+    // 12/8: последняя доля «12» — цифр две, кегль обязан это учесть.
+    expect(layout(22, "Одиннадцать", "и", 12).pulseFont)
+      .toBeLessThan(layout(22, "Одиннадцать", "и", 9).pulseFont);
   });
 });
 
