@@ -1250,17 +1250,12 @@ input[type="range"]::-webkit-slider-thumb {
   font-weight: 600;
 }
 
-.status-toast {
-  border: 1px solid var(--line);
-  color: var(--ivory);
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 6px 6px 0 rgba(7, 29, 80, 0.14);
-}
-
-.status-toast-content strong { color: var(--ivory); }
-.status-toast-content > span { color: var(--muted); }
-.status-toast > button { color: var(--muted); }
-.status-toast > button:hover { color: var(--brass); background: var(--panel-2); }
+/*
+ * Палитра тоста живёт в library.css и собрана на токенах поверхности. Здесь
+ * был её светлый дубль, который всё равно перебивался: library.css грузится
+ * из компонента, то есть после этого файла. Две конкурирующие палитры на один
+ * блок — как раз то, из-за чего тост оказался тёмным в светлой теме.
+ */
 
 .colophon {
   margin-top: 96px;

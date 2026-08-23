@@ -846,12 +846,19 @@
   width: min(380px, calc(100vw - 32px));
   min-height: 84px;
   padding: var(--s12);
-  border: 1px solid rgba(255, 255, 255, 0.055);
+  /*
+   * Тост красится токенами поверхности, а не своими значениями. Раньше здесь
+   * был фон rgba(28,35,55,.96) — тёмный, — а текст брался из --table-text,
+   * который в светлой теме почти чёрный: получалось тёмное на тёмном. Файл
+   * подключается из компонента, то есть после awwwards.css, и перебивал его
+   * светлый вариант; на токенах тост верен в обеих темах независимо от того,
+   * в каком порядке приедут стили.
+   */
+  border: 1px solid var(--line-soft);
   border-radius: 16px;
-  color: var(--table-text);
-  background: rgba(28, 35, 55, 0.96);
-  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.36);
-  backdrop-filter: blur(20px) saturate(130%);
+  color: var(--fg-strong);
+  background: var(--bg-surface);
+  box-shadow: 0 18px 52px rgba(12, 53, 145, 0.18);
 }
 
 .status-toast-icon {
@@ -860,8 +867,8 @@
   height: 36px;
   border-radius: 10px;
   place-items: center;
-  color: #93c5fd;
-  background: rgba(59, 130, 246, 0.12);
+  color: var(--color-info);
+  background: var(--color-info-bg);
 }
 
 .status-toast.progress .status-toast-icon .ui-icon {
@@ -869,13 +876,13 @@
 }
 
 .status-toast.success .status-toast-icon {
-  color: #86cfa5;
-  background: rgba(88, 168, 122, 0.13);
+  color: var(--color-success);
+  background: var(--color-success-bg);
 }
 
 .status-toast.error .status-toast-icon {
-  color: #e79a9a;
-  background: rgba(191, 103, 103, 0.13);
+  color: var(--color-error);
+  background: var(--color-error-bg);
 }
 
 .status-toast-content {
@@ -892,7 +899,7 @@
 }
 
 .status-toast-content strong {
-  color: var(--table-text);
+  color: var(--fg-strong);
   font-family: var(--ui);
   font-size: var(--text-label);
   font-weight: 650;
@@ -900,7 +907,7 @@
 }
 
 .status-toast-content > span {
-  color: var(--table-text-secondary);
+  color: var(--fg-muted);
   font-family: var(--ui);
   font-size: var(--text-caption);
   line-height: 16px;
@@ -911,14 +918,14 @@
   margin-top: var(--s4);
   overflow: hidden;
   border-radius: var(--r-pill);
-  background: rgba(169, 178, 207, 0.12);
+  background: var(--line-soft);
 }
 
 .status-toast-progress i {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: #93c5fd;
+  background: var(--color-info);
   transition: width 360ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -947,8 +954,8 @@
   bottom: auto;
 }
 
-.status-toast.success .status-toast-progress i { background: #86cfa5; }
-.status-toast.error .status-toast-progress i { background: #e79a9a; }
+.status-toast.success .status-toast-progress i { background: var(--color-success); }
+.status-toast.error .status-toast-progress i { background: var(--color-error); }
 
 .status-toast > button {
   display: grid;
@@ -958,15 +965,16 @@
   border: 0;
   border-radius: 8px;
   place-items: center;
-  color: var(--table-text-tertiary);
+  color: var(--fg-subtle);
   background: transparent;
   cursor: pointer;
   transition: color 160ms var(--ease), background 160ms var(--ease), transform 160ms var(--ease);
 }
 
 .status-toast > button:hover {
-  color: var(--table-text);
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--fg-strong);
+  /* Подсветка светлая: на белом фоне «белое с прозрачностью» не видно вовсе. */
+  background: var(--bg-raised);
 }
 
 .status-toast > button:active { transform: scale(0.94); }
