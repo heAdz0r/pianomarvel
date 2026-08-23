@@ -347,6 +347,92 @@ interface CandidateSet {
    * а не настоящий одновременный аккорд.
    */
   voiceSplit: boolean;
+  /**
+   * Вертикаль шире руки, но это выдержанный аккорд: пианист берёт его снизу
+   * вверх под педалью. Форма законная, только играется не разом — и ученику
+   * это нужно сказать словами, а не молча снять цифры.
+   */
+  rolled: boolean;
+}
+
+/**
+ * Минимальная длительность аккорда, при которой размах берётся разложенно.
+ * Считаем в секундах, а не в долях: разложение трёх звуков занимает около
+ * 0.15 с независимо от того, записаны они половинными или восьмыми. 0.35 с
+ * оставляет запас — аккорд заметно переживает собственное разложение. Ниже
+ * этой границы приём слышен как ошибка, а не как приём.
+ */
+const ROLLED_MIN_SECONDS = 0.35;
+
+/** Все ноты отрезка берутся одной позицией руки. */
+function grabFeasible(
+  keys: Key[],
+  assign: Finger[],
+  from: number,
+  to: number,
+  hand: Hand,
+  tables: SpanTables,
+): boolean {
+  for (let i = from; i < to; i += 1) {
+    for (let j = i + 1; j < to; j += 1) {
+      if (!chordFeasible(tables, hand, assign[i], keys[i], assign[j], keys[j])) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+/**
+ * Аккорд шире руки, взятый снизу вверх под педалью. Рука здесь не тянется, а
+ * перемещается: сначала берёт нижние звуки, отпускает их в педаль и доходит до
+ * верхних. Поэтому условие — два достижимых хвата подряд, а не одна форма на
+ * весь размах и не «соседние пары»: между соседними звуками децимы всё равно
+ * оказывается интервал, который соседние пальцы не берут.
+ */
+function rolledChordCandidates(
+  keys: Key[],
+  fixed: Array<Finger | undefined>,
+  hand: Hand,
+  tables: SpanTables,
+): Finger[][] {
+  return orientedFingerings(keys.length, hand).filter((assign) => {
+    for (let i = 0; i < assign.length; i += 1) {
+      if (fixed[i] !== undefined && fixed[i] !== assign[i]) return false;
+    }
+    for (let split = 1; split < assign.length; split += 1) {
+      if (
+        grabFeasible(keys, assign, 0, split, hand, tables)
+        && grabFeasible(keys, assign, split, assign.length, hand, tables)
+      ) {
+        return true;
+      }
+    }
+    return false;
+  });
+}
+
+/** Русское склонение «полутон» по числу: 21 полутон, 23 полутона, 16 полутонов. */
+function semitoneWord(count: number): string {
+  const tail = count % 10;
+  const teen = count % 100;
+  if (teen >= 11 && teen <= 14) return "полутонов";
+  if (tail === 1) return "полутон";
+  if (tail >= 2 && tail <= 4) return "полутона";
+  return "полутонов";
+}
+
+/** Разложить можно только выдержанный аккорд, а не вертикаль в быстром пассаже. */
+function isRollableChord(event: HandEvent): boolean {
+  if (event.notes.length < 3) return false;
+  if (event.notes.some((note) => note.grace)) return false;
+  const shortest = Math.min(...event.notes.map((note) => note.duration));
+  const seconds = interPressInterval(shortest, event.notes[0]?.tempo);
+  // Темп в партитуре не указан: движок трактует такое место как спокойное
+  // (см. motionScale), поэтому границу держим по нотной длительности.
+  return seconds === undefined
+    ? shortest >= 1 - EVENT_EPSILON
+    : seconds >= ROLLED_MIN_SECONDS;
 }
 
 function noteVoice(note: ParsedNote): string {
@@ -391,7 +477,7 @@ function candidatesFor(event: HandEvent, hand: Hand, tables: SpanTables): Candid
   const fixed = event.fixed;
   const filtered = strictChordCandidates(event.keys, fixed, hand, tables);
   if (filtered.length > 0) {
-    return { values: filtered, relaxed: false, voiceSplit: false };
+    return { values: filtered, relaxed: false, voiceSplit: false, rolled: false };
   }
 
   // MuseScore нередко кодирует педально удержанный бас и следующий аккорд
@@ -464,7 +550,20 @@ function candidatesFor(event: HandEvent, hand: Hand, tables: SpanTables): Candid
         }
         combined = next;
       }
-      return { values: combined, relaxed: false, voiceSplit: true };
+      return { values: combined, relaxed: false, voiceSplit: true, rolled: false };
+    }
+  }
+
+  /*
+   * Выдержанный аккорд шире руки — не «форма не найдена», а разложенный
+   * аккорд под педалью. Раньше такая вертикаль уходила в relaxed и теряла
+   * цифры целиком: в «Cornfield Chase» из-за децимы F2–A3 бас оставался без
+   * аппликатуры в девяти тактах, хотя пальцы 5-3-2 очевидны.
+   */
+  if (isRollableChord(event)) {
+    const rolled = rolledChordCandidates(event.keys, fixed, hand, tables);
+    if (rolled.length > 0) {
+      return { values: rolled, relaxed: false, voiceSplit: false, rolled: true };
     }
   }
 
@@ -477,6 +576,7 @@ function candidatesFor(event: HandEvent, hand: Hand, tables: SpanTables): Candid
     values: relaxed.length > 0 ? relaxed : oriented,
     relaxed: true,
     voiceSplit: false,
+    rolled: false,
   };
 }
 
@@ -978,6 +1078,8 @@ interface SolveResult {
   candidates: Finger[][][];
   relaxed: boolean[];
   voiceSplit: boolean[];
+  /** Событие взято разложенно: аккорд шире руки, но выдержан под педалью. */
+  rolled: boolean[];
   stepCosts: StepCost[];
   degradedEvents: Set<number>;
 }
@@ -993,6 +1095,7 @@ function solveHand(
   const candidates = candidateSets.map((set) => set.values);
   const relaxed = candidateSets.map((set) => set.relaxed);
   const voiceSplit = candidateSets.map((set) => set.voiceSplit);
+  const rolled = candidateSets.map((set) => set.rolled);
   const degradedEvents = new Set<number>();
   if (events.length === 0) {
     return {
@@ -1000,6 +1103,7 @@ function solveHand(
       candidates,
       relaxed,
       voiceSplit,
+      rolled,
       stepCosts: [],
       degradedEvents,
     };
@@ -1354,6 +1458,7 @@ function solveHand(
     candidates,
     relaxed,
     voiceSplit,
+    rolled,
     stepCosts,
     degradedEvents,
   };
@@ -1449,6 +1554,11 @@ export function planFingering(xml: string, options: FingeringOptions = {}): Fing
       notes: number;
     }
   >();
+  /** Выдержанные аккорды шире руки: цифры печатаются, приём объясняется. */
+  const rolledByMeasure = new Map<
+    string,
+    { measureIndex: number; measureNumber: string; hand: Hand; span: number }
+  >();
   let positionChanges = 0;
   let thumbOnBlack = 0;
   let objectiveCost = 0;
@@ -1540,7 +1650,7 @@ export function planFingering(xml: string, options: FingeringOptions = {}): Fing
       solved = solveHand(events, hand, tables, weights, merged);
       effectiveHints = merged;
     }
-    const { chosen, candidates, relaxed, voiceSplit, stepCosts, degradedEvents } = solved;
+    const { chosen, candidates, relaxed, voiceSplit, rolled, stepCosts, degradedEvents } = solved;
 
     for (let k = 0; k < events.length; k += 1) {
       const event = events[k];
@@ -1564,6 +1674,21 @@ export function planFingering(xml: string, options: FingeringOptions = {}): Fing
           ).length
         : 0;
       counts[hand] += countedNotes;
+
+      if (printable && rolled[k]) {
+        const midis = event.notes.map((note) => note.midi as number);
+        const span = Math.max(...midis) - Math.min(...midis);
+        const rolledKey = `${event.measureIndex}:${hand}`;
+        const previous = rolledByMeasure.get(rolledKey);
+        if (!previous || span > previous.span) {
+          rolledByMeasure.set(rolledKey, {
+            measureIndex: event.measureIndex,
+            measureNumber: event.measureNumber,
+            hand,
+            span,
+          });
+        }
+      }
 
       if (!printable) {
         for (const note of event.notes) suppressed.add(note.index);
@@ -1650,6 +1775,18 @@ export function planFingering(xml: string, options: FingeringOptions = {}): Fing
         `Такты ${spilledMeasures.join(", ")}: в одной руке больше пяти одновременных нот; лишние цифры подавлены, соседний палец сохранён только во внутреннем плане.`,
       );
     }
+  }
+
+  for (const aggregate of [...rolledByMeasure.values()].sort(
+    (left, right) =>
+      left.measureIndex - right.measureIndex || left.hand.localeCompare(right.hand),
+  )) {
+    const side = aggregate.hand === "R" ? "правая" : "левая";
+    warnings.push(
+      `Такт ${aggregate.measureNumber}, ${side} рука: аккорд шире руки `
+      + `(${aggregate.span} ${semitoneWord(aggregate.span)}) — `
+      + "берётся снизу вверх под педалью, а не разом; цифры показывают порядок пальцев.",
+    );
   }
 
   for (const aggregate of [...unprintableByMeasure.values()].sort(

@@ -604,6 +604,62 @@ describe("подбор по партитуре", () => {
     expect(annotateFingering(xml, plan)).not.toContain("<fingering");
   });
 
+  /*
+   * «Cornfield Chase»: в басу лежит децима F2–A3 половинными. Разом рука её не
+   * берёт, и раньше движок снимал цифры со всего события — ученик оставался
+   * без аппликатуры в девяти тактах подряд и не понимал, как такое сыграть.
+   * Пианист берёт такой аккорд снизу вверх под педалью; это законная форма, и
+   * её нужно печатать вместе с объяснением приёма.
+   */
+  test("выдержанный аккорд шире руки печатается разложенным, а не пропадает", () => {
+    const xml = makeCrossHandChordScore({
+      right: [],
+      left: [41, 48, 57],
+      leftStaccato: false,
+      duration: 6,
+    });
+    const plan = planFingering(xml, { mode: "rebuild" });
+    const chord = parseScore(xml).notes.filter((note) => note.midi !== undefined);
+    expect(chord).toHaveLength(3);
+    expect(chord.every((note) => !plan.suppressed.has(note.index))).toBe(true);
+    const fingers = chord.map((note) => plan.assignments.get(note.index));
+    expect(fingers.every((finger) => finger !== undefined)).toBe(true);
+    expect(new Set(fingers).size).toBe(3);
+    expect(plan.report.warnings.some((warning) => warning.includes("шире руки"))).toBe(true);
+    expect(annotateFingering(xml, plan)).toContain("<fingering");
+  });
+
+  test("короткий аккорд шире руки не выдаётся за разложенный", () => {
+    // Восьмая при неизвестном темпе — не место для разложения: приём слышен
+    // как ошибка, и честнее не печатать цифры вовсе.
+    const xml = makeCrossHandChordScore({
+      right: [],
+      left: [41, 48, 57],
+      leftStaccato: false,
+      duration: 1,
+    });
+    const plan = planFingering(xml, { mode: "rebuild" });
+    const chord = parseScore(xml).notes.filter((note) => note.midi !== undefined);
+    expect(chord.every((note) => plan.suppressed.has(note.index))).toBe(true);
+    expect(plan.report.warnings.some((warning) => warning.includes("шире руки"))).toBe(false);
+    expect(
+      plan.report.warnings.some((warning) => warning.includes("физически допустимая")),
+    ).toBe(true);
+  });
+
+  test("аккорд в пределах руки разложенным не объявляется", () => {
+    const xml = makeCrossHandChordScore({
+      right: [],
+      left: [48, 52, 55],
+      leftStaccato: false,
+      duration: 6,
+    });
+    const plan = planFingering(xml, { mode: "rebuild" });
+    const chord = parseScore(xml).notes.filter((note) => note.midi !== undefined);
+    expect(chord.every((note) => !plan.suppressed.has(note.index))).toBe(true);
+    expect(plan.report.warnings.some((warning) => warning.includes("шире руки"))).toBe(false);
+  });
+
   test("единственное физически допустимое разбиение переносит крайнюю ноту другой руке", () => {
     const xml = makeCrossHandChordScore({
       right: [61, 78],
