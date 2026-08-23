@@ -1,0 +1,296 @@
+.field {
+  min-width: 0;
+}
+
+.field-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s8);
+  margin: 0 0 var(--s8);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--fs-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.field-label .req {
+  color: var(--brass);
+  font-size: var(--text-caption);
+  letter-spacing: 0.08em;
+}
+
+.field-value {
+  color: var(--brass-2);
+  font-size: var(--fs-sm);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+  width: 100%;
+  min-height: 48px;
+  padding: var(--s12) var(--s16);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  outline: none;
+  color: var(--ivory);
+  background: var(--panel-2);
+  font-family: var(--ui);
+  font-size: var(--fs-body);
+  transition:
+    border-color var(--t-fast),
+    box-shadow var(--t-fast),
+    background var(--t-fast);
+}
+
+input.mono,
+input[type="number"] {
+  font-family: var(--mono);
+  font-size: var(--fs-sm);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted-2);
+}
+
+input[type="text"]:hover,
+input[type="number"]:hover,
+textarea:hover,
+select:hover {
+  background: var(--panel-3);
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--brass);
+  background: var(--panel-3);
+  box-shadow: 0 0 0 3px rgba(228, 179, 97, 0.13);
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+  color: var(--muted-2);
+  background: var(--panel);
+  cursor: not-allowed;
+}
+
+textarea {
+  min-height: 80px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+select {
+  appearance: none;
+  cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 52%,
+    calc(100% - 13px) 52%;
+  background-repeat: no-repeat;
+  background-size: 5px 5px;
+}
+
+.field--error input {
+  border-color: var(--rose);
+  box-shadow: 0 0 0 3px var(--rose-bg);
+}
+
+.field-message {
+  display: block;
+  margin-top: var(--s8);
+  color: var(--rose);
+  font-size: var(--fs-sm);
+}
+
+input[type="range"] {
+  width: 100%;
+  height: 48px;
+  margin: 0;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--brass) var(--pct, 0%), var(--line) var(--pct, 0%));
+}
+
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--line);
+}
+
+input[type="range"]::-moz-range-progress {
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--brass);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  width: 20px;
+  height: 20px;
+  margin-top: -8px;
+  appearance: none;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: var(--brass);
+  box-shadow: 0 0 0 1px var(--brass), 0 4px 12px -2px rgba(228, 179, 97, 0.55);
+  transition: transform var(--t-fast);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: var(--brass);
+}
+
+input[type="range"]:hover::-webkit-slider-thumb {
+  transform: scale(1.12);
+}
+
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s8);
+  min-height: 44px;
+  padding: var(--s12) var(--s24);
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  background: var(--brass);
+  font-family: var(--ui);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--t-fast),
+    color var(--t-fast),
+    border-color var(--t-fast),
+    box-shadow var(--t-fast),
+    transform var(--t-fast);
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--brass-2);
+  box-shadow: 0 10px 26px -14px rgba(228, 179, 97, 0.65);
+  transform: translateY(-1px);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn:disabled {
+  /* CHANGED: раньше фон совпадал с панелью и кнопка «растворялась». Даём рамку
+     и чуть более светлый фон, чтобы неактивная кнопка читалась как кнопка. */
+  color: var(--muted);
+  background: var(--panel-3);
+  border-color: var(--line);
+  cursor: not-allowed;
+}
+
+.btn.ghost {
+  border-color: var(--line);
+  color: var(--ivory-dim);
+  background: transparent;
+}
+
+.btn.ghost:hover:not(:disabled) {
+  border-color: rgba(228, 179, 97, 0.45);
+  color: var(--ivory);
+  background: rgba(228, 179, 97, 0.06);
+  box-shadow: none;
+}
+
+.btn.ghost:disabled {
+  border-color: var(--line-soft);
+  color: var(--muted-2);
+  background: transparent;
+}
+
+.btn.is-loading {
+  pointer-events: none;
+}
+
+.spin {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border: 2px solid rgba(11, 14, 26, 0.28);
+  border-top-color: var(--ink);
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+}
+
+.spin.brass {
+  border-color: rgba(228, 179, 97, 0.25);
+  border-top-color: var(--brass);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    color var(--t-fast),
+    border-color var(--t-fast),
+    background var(--t-fast),
+    transform var(--t-fast);
+}
+
+.icon-btn:hover {
+  border-color: rgba(242, 236, 221, 0.2);
+  color: var(--ivory);
+  background: rgba(242, 236, 221, 0.035);
+}
+
+.icon-btn:active {
+  transform: scale(0.94);
+}
+
+.icon-btn.add {
+  border-color: rgba(228, 179, 97, 0.28);
+  color: var(--brass);
+}
+
+.icon-btn.add:hover {
+  border-color: var(--brass);
+  color: var(--ink);
+  background: var(--brass);
+}

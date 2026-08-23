@@ -1,0 +1,67 @@
+.movement-reveal-enter-active,
+.movement-reveal-leave-active {
+  transition:
+    opacity 0.45s var(--ease),
+    transform 0.45s var(--ease);
+}
+
+.movement-reveal-enter-from,
+.movement-reveal-leave-to {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.file-row-enter-active,
+.file-row-leave-active {
+  transition:
+    opacity var(--t),
+    transform var(--t);
+}
+
+.file-row-enter-from,
+.file-row-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+@media (max-width: 640px) {
+  .movements {
+    gap: var(--s48);
+  }
+
+  .movement {
+    padding: var(--s24) var(--s20);
+    border-radius: var(--r-md);
+  }
+
+  .movement-head {
+    grid-template-columns: auto 1fr;
+  }
+
+  .movement-meta {
+    display: none;
+  }
+
+  .picker {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .path-input {
+    grid-column: 1 / -1;
+  }
+
+  .browse-btn,
+  .scan-btn {
+    width: 100%;
+  }
+
+  .file-row {
+    grid-template-columns: 76px minmax(0, 1fr) 44px;
+    gap: var(--s8);
+  }
+
+  .dossier-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

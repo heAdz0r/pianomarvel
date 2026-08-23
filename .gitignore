@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.browser-profile/
+.data/
+.test-tmp/
+*.log
+vite.config.ts.timestamp-*.mjs
+captures/
+.grepai/
+
+# Локальная конфигурация агентов и инструментов: содержит личные пути.
+*.rtk-lock
+.claude/settings.local.json
+CLAUDE.md
+AGENTS.md

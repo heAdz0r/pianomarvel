@@ -1,0 +1,346 @@
+/*
+ * ЕДИНЫЙ ИСТОЧНИК ПАЛИТРЫ.
+ *
+ * CHANGED (M5.1): раньше палитра объявлялась дважды — светлая в awwwards.css молча
+ * перекрывала тёмную здесь. Имена при этом остались от тёмной темы и означали
+ * противоположное своему значению: `--ink` («чёрные чернила») давал почти белый фон,
+ * `--ivory` — тёмно-синий текст, `--brass` («латунь») — синий. Теперь тема ровно одна
+ * на блок, а роль каждого токена задана семантическим именем.
+ *
+ * Семантические имена (--bg-*, --fg-*, --accent-*) — источник истины.
+ * Исторические имена (--ink, --ivory, --brass, --panel*) оставлены псевдонимами:
+ * их около 1500 использований, поэтому переезд идёт отдельно и файл за файлом.
+ * Новый код обязан использовать только семантические имена.
+ */
+:root {
+  color-scheme: light;
+
+  /* Поверхности: base — страница, surface — карточка, raised/sunken — акценты. */
+  --bg-base: #f3f7ff;
+  --bg-surface: #ffffff;
+  --bg-raised: #eef4ff;
+  --bg-sunken: #dce8ff;
+
+  /* Текст по убыванию силы. Контраст к --bg-base и --bg-surface проверяет bun test. */
+  --fg-strong: #071d50;
+  --fg: #21427f;
+  --fg-muted: #4a6390;
+  --fg-subtle: #5d73a0;
+
+  /* Акцентная рампа — единственный источник фирменного синего. */
+  --accent-300: #7ea4ff;
+  --accent-400: #4f82ff;
+  --accent-500: #1557ff;
+  --accent-600: #0b45d8;
+  --accent-700: #07349f;
+
+  /* Семантика состояния (M5.2): success/error взяты из прежних sage/rose без сдвига. */
+  --color-success: #187957;
+  --color-success-bg: #e9f8f1;
+  --color-error: #c63e50;
+  --color-error-bg: #fff0f2;
+  --color-warning: #9c6200;
+  --color-warning-bg: #fff6e5;
+  --color-info: var(--accent-500);
+  --color-info-bg: #eaf1ff;
+  --color-disabled: #8999ba;
+
+  --line: rgba(12, 53, 145, 0.2);
+  --line-soft: rgba(12, 53, 145, 0.1);
+
+  /* ——— Псевдонимы прежних имён. Не использовать в новом коде. ——— */
+  --ink: var(--bg-base);
+  --ink-2: var(--bg-surface);
+  --panel: var(--bg-surface);
+  --panel-2: var(--bg-raised);
+  --panel-3: var(--bg-sunken);
+  --ivory: var(--fg-strong);
+  --ivory-dim: var(--fg);
+  --muted: var(--fg-muted);
+  --muted-2: var(--fg-subtle);
+  --brass: var(--accent-500);
+  --brass-2: #073bbd;
+  --brass-deep: #336dff;
+  --brass-300: var(--accent-300);
+  --brass-400: var(--accent-400);
+  --brass-500: var(--accent-500);
+  --brass-600: var(--accent-600);
+  --brass-700: var(--accent-700);
+  --rose: var(--color-error);
+  --rose-bg: var(--color-error-bg);
+  --sage: var(--color-success);
+  --sage-bg: var(--color-success-bg);
+
+  --table-base: var(--bg-surface);
+  --table-header: #e5eeff;
+  --table-hover: #f0f5ff;
+  --table-control: #e6eeff;
+  --table-control-hover: #d2e1ff;
+  --table-text: var(--fg-strong);
+  --table-text-secondary: #365487;
+  --table-text-tertiary: #5f7194;
+
+  /* Гарнитуры. CHANGED (M4.4): объявлены один раз и только те, что реально грузит
+     index.html. Прежние "Instrument Serif" и "Inter" не подключались никогда и
+     всегда перекрывались — при смене порядка @import интерфейс молча уехал бы на
+     Georgia и system-ui. */
+  --display: "Unbounded", "Manrope", sans-serif;
+  --ui: "Manrope", system-ui, -apple-system, sans-serif;
+  --mono: "Space Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /*
+   * ШКАЛА КЕГЛЯ. CHANGED (M4.1/M4.2): раньше в интерфейсе жило около сорока
+   * размеров, включая 7px кириллицей на подписях переключателя режима. Шкал
+   * теперь две и они не смешиваются.
+   *
+   * UI-слой — плотность данных, потолок 24px. Иерархия внутри него задаётся
+   * ВЕСОМ и ЦВЕТОМ, а не долями пикселя: шаг 13/13.5/14 глазом не читается.
+   * --text-caption — абсолютный пол. Ниже 11px кириллица теряет различительные
+   * признаки строчных: «в», «н», «п», «и» схлопываются в один штрих.
+   */
+  --text-page: 22px;
+  --text-section: 18px;
+  --text-body: 15px;
+  --text-label: 13px;
+  --text-caption: 11px;
+
+  /* Display-слой — только плакатные заголовки. Это подпись интерфейса (identity). */
+  --display-xl: clamp(58px, 10.4vw, 142px);
+  --display-lg: clamp(44px, 6.8vw, 106px);
+  --display-md: clamp(34px, 3.7vw, 56px);
+
+  /* Прежние имена — псевдонимы на время переезда. В новом коде не использовать. */
+  --fs-display: var(--display-xl);
+  --fs-num: 28px;
+  --fs-lead: var(--text-section);
+  --fs-body: var(--text-body);
+  --fs-sm: var(--text-label);
+  --fs-label: var(--text-caption);
+
+  --s4: 4px;
+  --s8: 8px;
+  --s12: 12px;
+  --s16: 16px;
+  --s20: 20px;
+  --s24: 24px;
+  --s32: 32px;
+  --s40: 40px;
+  --s48: 48px;
+  --s64: 64px;
+  --s80: 80px;
+  --s96: 96px;
+
+  --r-sm: 12px;
+  --r-md: 20px;
+  --r-lg: 32px;
+  --r-pill: 999px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring: cubic-bezier(0.16, 1.3, 0.3, 1);
+  --t-fast: 0.16s var(--ease);
+  --t: 0.28s var(--ease);
+  --maxw: 1440px;
+}
+
+/*
+ * Тёмная тема. CHANGED (M6.1): полная тёмная палитра уже существовала в этом файле,
+ * но была недостижима — светлая перекрывала её без всякого условия. Теперь она
+ * доступна, но ТОЛЬКО по явному data-theme="dark".
+ *
+ * Автоматическое включение по prefers-color-scheme СОЗНАТЕЛЬНО отложено: в проекте
+ * 203 захардкоженных hex и 277 литералов rgba() мимо палитры (M5.2). Пока они не
+ * переведены на токены, переключение темы даёт смесь тёмных поверхностей со светлыми
+ * литералами. Включать авто-режим только после M5.2 — см. docs/design-system-prd.md.
+ */
+:root[data-theme="dark"] {
+  --bg-base: #090b15;
+  --bg-surface: #111629;
+  --bg-raised: #171d33;
+  --bg-sunken: #1c2340;
+  --ink-2: #0c1020;
+
+  --fg-strong: #f2ecdd;
+  --fg: #d3cdbf;
+  --fg-muted: #a8b0c9;
+  --fg-subtle: #8a93b2;
+
+  --accent-300: #f4d79a;
+  --accent-400: #e4b361;
+  --accent-500: #e4b361;
+  --accent-600: #cdb075;
+  --accent-700: #b89353;
+  --brass-2: #f4d79a;
+  --brass-deep: #b98a3e;
+
+  --color-success: #8ec79c;
+  --color-success-bg: rgba(134, 192, 149, 0.12);
+  --color-error: #e0a0a0;
+  --color-error-bg: rgba(207, 125, 125, 0.12);
+  --color-warning: #e8bd7a;
+  --color-warning-bg: rgba(232, 189, 122, 0.12);
+  --color-info-bg: rgba(228, 179, 97, 0.12);
+  --color-disabled: #5c6688;
+
+  --line: rgba(242, 236, 221, 0.09);
+  --line-soft: rgba(242, 236, 221, 0.055);
+
+  --table-header: #121827;
+  --table-hover: #151c2d;
+  --table-control: #1a2235;
+  --table-control-hover: #222c43;
+  --table-text-secondary: #c3cbe0;
+  --table-text-tertiary: #a4adc6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background: var(--ink);
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: var(--ivory);
+  background: var(--ink);
+  font-family: var(--ui);
+  font-size: var(--fs-body);
+  line-height: 1.55;
+  letter-spacing: -0.006em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(90% 58% at 8% -8%, rgba(228, 179, 97, 0.13), transparent 58%),
+    radial-gradient(80% 62% at 100% 3%, rgba(82, 91, 132, 0.16), transparent 58%),
+    linear-gradient(180deg, var(--ink-2) 0%, var(--ink) 48%, #070911 100%);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20% -10% 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(242, 236, 221, 0.022) 0,
+    rgba(242, 236, 221, 0.022) 1px,
+    transparent 1px,
+    transparent 88px
+  );
+  mask-image: radial-gradient(120% 90% at 50% 0%, #000 28%, transparent 78%);
+  animation: staff-drift 28s linear infinite;
+}
+
+@keyframes staff-drift {
+  to {
+  transform: translateY(88px);
+  }
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  width: min(100%, var(--maxw));
+  margin: 0 auto;
+  padding: clamp(var(--s40), 7vw, var(--s96)) clamp(var(--s20), 5vw, var(--s48))
+  var(--s96);
+}
+
+.app > * {
+  animation: rise-in 0.72s var(--ease) both;
+}
+
+.app > .hero {
+  animation-delay: 0.02s;
+}
+
+.app > .session-movement {
+  animation-delay: 0.12s;
+}
+
+.app > .movements {
+  animation-delay: 0.2s;
+}
+
+@keyframes rise-in {
+  from {
+  opacity: 0;
+  transform: translateY(20px);
+  }
+  to {
+  opacity: 1;
+  transform: none;
+  }
+}
+
+/*
+ * CHANGED (M4.2): теговые умолчания браузера мимо шкалы. UA-стиль задаёт
+ * `small { font-size: 0.8333em }`, что от 15px даёт 12.5px — ступень, которой в
+ * шкале нет, и она же уводит текст к полу при вложенности. `sub`/`sup` со
+ * значением `smaller` умеют опускаться ниже 11px. Пришпиливаем к шкале явно.
+ */
+small,
+code,
+kbd,
+samp,
+sub,
+sup {
+  font-size: var(--text-label);
+}
+
+.mono {
+  font-family: var(--mono);
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.ui-icon {
+  display: block;
+  flex: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brass-2);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+      animation-duration: 0.001s !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001s !important;
+  }
+
+  .app > * {
+      opacity: 1 !important;
+      transform: none !important;
+  }
+}

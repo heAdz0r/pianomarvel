@@ -1,0 +1,143 @@
+.session-movement {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--s16);
+  margin-bottom: var(--s48);
+  padding: var(--s16) var(--s20);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  background: rgba(17, 22, 41, 0.58);
+  backdrop-filter: blur(12px);
+  transition:
+    border-color var(--t),
+    background var(--t);
+}
+
+.session-index {
+  color: var(--brass-deep);
+  font-family: var(--display);
+  font-size: var(--fs-num);
+  font-style: italic;
+  line-height: 1;
+}
+
+.session-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.session-kicker {
+  color: var(--muted-2);
+  font-family: var(--mono);
+  font-size: var(--text-caption);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.session-status {
+  display: flex;
+  align-items: center;
+  gap: var(--s8);
+  color: var(--ivory-dim);
+  font-size: var(--fs-sm);
+}
+
+.session-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s8);
+}
+
+.status-dot {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--muted-2);
+  transition:
+    background var(--t),
+    box-shadow var(--t);
+}
+
+.session-movement.unknown {
+  border-color: rgba(228, 179, 97, 0.12);
+}
+
+.session-movement.unknown .status-dot {
+  background: var(--brass);
+  opacity: 0.5;
+}
+
+.session-movement.loggedOut .status-dot {
+  background: var(--rose);
+  box-shadow: 0 0 14px rgba(217, 138, 138, 0.4);
+}
+
+.session-movement.waiting {
+  border-color: rgba(228, 179, 97, 0.25);
+}
+
+.session-movement.waiting .status-dot {
+  background: var(--brass);
+}
+
+.session-movement.waiting .status-dot::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border: 1px solid var(--brass);
+  border-radius: 50%;
+  animation: status-ping 1.4s var(--ease) infinite;
+}
+
+.session-movement.loggedIn {
+  border-color: rgba(142, 199, 156, 0.22);
+  background: linear-gradient(90deg, rgba(142, 199, 156, 0.06), rgba(17, 22, 41, 0.58));
+  animation: session-confirm 0.8s var(--ease);
+}
+
+.session-movement.loggedIn .status-dot {
+  background: var(--sage);
+  box-shadow: 0 0 16px rgba(142, 199, 156, 0.5);
+}
+
+@keyframes status-ping {
+  from {
+    opacity: 0.85;
+    transform: scale(0.55);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+
+@keyframes session-confirm {
+  50% {
+    border-color: rgba(142, 199, 156, 0.52);
+  }
+}
+
+@media (max-width: 560px) {
+  .session-movement {
+    grid-template-columns: auto 1fr;
+  }
+
+  .session-action {
+    width: 100%;
+  }
+
+  .session-movement > .session-action {
+    grid-column: 1 / -1;
+  }
+
+  .session-actions {
+    grid-column: 1 / -1;
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

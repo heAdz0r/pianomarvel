@@ -1,0 +1,35 @@
+{
+  "name": "pianomarvel-uploader",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run server/free-ports.ts && concurrently -k -n SERVER,WEB -c blue,green \"bun --watch run server/index.ts\" \"vite\"",
+    "server": "bun run server/index.ts",
+    "login": "bun run server/login.ts",
+    "scrape": "bun run server/scrape.ts",
+    "scrape:musescore": "bun run server/scrape-musescore.ts",
+    "capture": "bun run server/capture.ts",
+    "bench:fingering": "bun run server/fingering-bench.ts",
+    "audit:fingering": "bun run server/fingering-audit.ts",
+    "typecheck": "vue-tsc --noEmit",
+    "build": "vite build",
+    "preview": "vite preview",
+    "postinstall": "playwright install chromium"
+  },
+  "dependencies": {
+    "@tanstack/vue-table": "^8.21.3",
+    "opensheetmusicdisplay": "2.1.0",
+    "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.0",
+    "@types/node": "^20.12.7",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "concurrently": "^8.2.2",
+    "playwright": "^1.44.0",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.8",
+    "vue-tsc": "^2.0.13"
+  }
+}
