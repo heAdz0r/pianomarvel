@@ -2396,6 +2396,7 @@ type ViewerState = "empty" | "loading" | "ready" | "error";
 const surface = ref<HTMLElement>();
 const scoreRoot = ref<HTMLElement>();
 const rhythmOverview = ref<HTMLElement>();
+const rhythmDetailMeasures = ref<HTMLElement>(); // changed: контейнер подробных тактов
 const tooltipElement = ref<HTMLElement>();
 const rhythmTooltipElement = ref<HTMLElement>();
 const state = ref<ViewerState>("empty");
@@ -2709,17 +2710,31 @@ const tempo = ref(DEFAULT_QUARTER_BPM);
 const tempoFromScore = ref(false);
 const activeCellIndex = ref(-1);
 /**
- * Подробная таблица остаётся одной по высоте. Для окна 3/5 тактов верхняя
- * мини-карта показывает весь отрезок, а во время проигрывания подробный счёт
- * сам переключается на текущий такт.
+ * Подробный счёт рисует всё окно целиком: при 3/5 тактах ученик читает отрезок
+ * подряд, а не по одному такту. Такт под бегунком (или выбранный вручную)
+ * подсвечивается, поэтому место в отрезке не теряется.
  */
-const detailedRhythmRows = computed(() => {
-  const playingMeasure = windowCells.value[activeCellIndex.value]?.measureIndex;
-  const index = playingMeasure ?? activeMeasureIndex.value;
-  const row = rhythmRows.value.find((candidate) => candidate.index === index)
-    ?? rhythmRows.value[0];
-  return row ? [row] : [];
-});
+const detailedRhythmRows = computed(() => rhythmRows.value); // changed: окно целиком
+/** Такт, на котором сейчас внимание: сначала бегунок, иначе ручной выбор. */
+const focusedMeasureIndex = computed(
+  () => windowCells.value[activeCellIndex.value]?.measureIndex
+    ?? activeMeasureIndex.value,
+); // changed: подсветка вместо подмены строки разбора
+/**
+ * Формат подробного разбора. «line» повторяет нотный стан: такты стоят рядом
+ * через тактовую черту, подписи рук — один раз слева. «stack» кладёт такты
+ * друг под друга, доли выстраиваются в общую колонку.
+ */
+type DetailLayout = "line" | "stack"; // changed: два формата вместо одного
+const detailLayout = ref<DetailLayout>("line");
+/** Заголовок разбора: «Такт 4» для одиночного окна и «Такты 3–7» для отрезка. */
+const detailRangeLabel = computed(() => {
+  const rows = detailedRhythmRows.value;
+  if (!rows.length) return "";
+  const first = rows[0].label;
+  const last = rows[rows.length - 1].label;
+  return rows.length > 1 ? `Такты ${first}–${last}` : `Такт ${first}`;
+}); // changed: диапазон вместо одного номера
 const playheadCountLabel = computed(
   () => windowCells.value[activeCellIndex.value]?.cell.label ?? "",
 );
@@ -2917,6 +2932,28 @@ function revealOverviewMeasure(index: number): void {
   });
 }
 
+/**
+ * Подробный разбор теперь длиннее экрана, поэтому во время игры подтягиваем
+ * текущий такт в зону видимости. «nearest» ничего не двигает, пока такт и так
+ * виден целиком, — страница не дёргается на каждой доле.
+ */
+function revealDetailMeasure(index: number): void { // changed: следование за бегунком по вертикали
+  void nextTick(() => {
+    const host = rhythmDetailMeasures.value;
+    const target = host?.querySelector<HTMLElement>(
+      `[data-detail-measure="${index}"]`,
+    );
+    if (!target || typeof target.scrollIntoView !== "function") return;
+    target.scrollIntoView({
+      block: "nearest",
+      inline: "nearest", // changed: в формате «в линию» отрезок едет по горизонтали
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+    });
+  });
+}
+
 function followPlayback(): void {
   if (!playing.value) return;
   const position = player.position();
@@ -2939,6 +2976,7 @@ function followPlayback(): void {
       if (activeCell && activeCell.measureIndex !== activeMeasureIndex.value) {
         activeMeasureIndex.value = activeCell.measureIndex;
         revealOverviewMeasure(activeCell.measureIndex);
+        revealDetailMeasure(activeCell.measureIndex); // changed: подтягиваем такт разбора
       }
     }
     updatePlayhead(globalQuarters);
@@ -4172,29 +4210,92 @@ onBeforeUnmount(() => {
           <header class="rhythm-detail-head">
             <span>
               <small>Подробный разбор</small>
-              <strong>
-                Такт {{ detailedRhythmRows[0]?.label }}
-              </strong>
+              <strong>{{ detailRangeLabel }}</strong>
             </span>
             <p>
               Говори слоги слева направо ровно. Точка — нажми клавишу,
               линия — продолжай держать.
+              <b v-if="detailedRhythmRows.length > 1">
+                {{
+                  detailLayout === "line"
+                    ? "Такты стоят рядом, как в нотном стане: считай слева направо через тактовые черты."
+                    : "Такты идут друг под другом: доли выстроены в одну колонку, счёт читается сверху вниз."
+                }}
+              </b>
             </p>
+            <div
+              v-if="detailedRhythmRows.length > 1"
+              class="rhythm-detail-layout"
+              role="group"
+              aria-label="Формат подробного разбора"
+            >
+              <button
+                type="button"
+                class="rhythm-switch"
+                :class="{ 'is-on': detailLayout === 'line' }"
+                :aria-pressed="detailLayout === 'line'"
+                aria-label="Такты в линию, как в нотном стане"
+                @click="detailLayout = 'line'"
+              >
+                <span class="rhythm-switch-glyph" aria-hidden="true">▥</span>
+                <span class="rhythm-switch-label">В линию</span>
+              </button>
+              <button
+                type="button"
+                class="rhythm-switch"
+                :class="{ 'is-on': detailLayout === 'stack' }"
+                :aria-pressed="detailLayout === 'stack'"
+                aria-label="Такты в столбик, друг под другом"
+                @click="detailLayout = 'stack'"
+              >
+                <span class="rhythm-switch-glyph" aria-hidden="true">▤</span>
+                <span class="rhythm-switch-label">В столбик</span>
+              </button>
+            </div>
           </header>
 
-          <div class="rhythm-detail-measures">
+          <div
+            ref="rhythmDetailMeasures"
+            class="rhythm-detail-measures"
+            :class="`is-${detailLayout}`"
+          >
             <section
-              v-for="row in detailedRhythmRows"
+              v-for="(row, rowIndex) in detailedRhythmRows"
               :key="`detail-${row.index}`"
               class="rhythm-measure-detail"
+              :class="{
+                'is-focused': row.index === focusedMeasureIndex,
+                'is-live': playing && row.index === focusedMeasureIndex,
+              }"
+              :style="{ '--rhythm-measure-cells': String(Math.max(1, row.cells.length)) }"
+              :data-detail-measure="row.index"
               :aria-label="`Счёт такта ${row.label}: ${row.rhythm.spoken}`"
             >
-              <header class="rhythm-measure-detail-title">
-                <small>Такт</small>
-                <strong>{{ row.label }}</strong>
+              <header
+                v-if="detailedRhythmRows.length > 1"
+                class="rhythm-measure-detail-title"
+              >
+                <button
+                  type="button"
+                  class="rhythm-measure-detail-pick"
+                  :aria-pressed="row.index === activeMeasureIndex"
+                  :aria-label="`Разбирать такт ${row.label}`"
+                  @click="selectActiveMeasure(row.index)"
+                >
+                  <small>Такт</small>
+                  <strong>{{ row.label }}</strong>
+                </button>
+                <i>{{ row.rhythm.subdivisions }} поз. на долю</i>
+                <em v-if="playing && row.index === focusedMeasureIndex">сейчас</em>
               </header>
-              <div class="rhythm-detail-grid" :class="{ 'is-live': playing }">
-                <div class="rhythm-detail-labels">
+              <div
+                class="rhythm-detail-grid"
+                :class="{ 'is-live': playing && row.index === focusedMeasureIndex }"
+              >
+                <div
+                  v-if="detailLayout === 'stack' || rowIndex === 0"
+                  class="rhythm-detail-labels"
+                >
                   <span aria-hidden="true"><b>Скажи</b><small>вслух ровно</small></span>
                   <button
                     v-for="hand in rhythmHands"
@@ -5189,23 +5290,62 @@ onBeforeUnmount(() => {
 .rhythm-detail-measures {
   display: grid;
   min-width: 0;
-  gap: 16px;
+  gap: 10px; /* changed: такты отрезка стоят плотно, как системы в нотах */
   margin-top: 16px;
 }
 
 .rhythm-measure-detail {
   min-width: 0;
+  padding: 6px 8px 8px; /* changed: место под подсветку активного такта */
+  border-radius: 14px;
+  transition: background 140ms ease, box-shadow 140ms ease;
 }
 
-.rhythm-measure-detail + .rhythm-measure-detail {
-  padding-top: 16px;
-  border-top: 1px solid rgba(70, 107, 183, 0.14);
+/*
+ * Такт под бегунком подсвечен, остальные остаются в полную яркость: их тоже
+ * читают вперёд, поэтому гасить соседей нельзя.
+ */
+.rhythm-measure-detail.is-focused { /* changed */
+  background: rgba(228, 237, 255, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(39, 98, 216, 0.24);
+}
+
+.rhythm-measure-detail.is-live { /* changed */
+  box-shadow: inset 0 0 0 1px rgba(39, 98, 216, 0.45);
 }
 
 .rhythm-measure-detail-title {
   display: flex;
-  align-items: baseline;
+  align-items: center; /* changed: в строке появились чип и подпись */
   gap: 8px;
+  padding-bottom: 6px;
+}
+
+.rhythm-measure-detail-pick { /* changed: номер такта выбирает такт для разбора */
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.rhythm-measure-detail-pick[aria-pressed="true"] {
+  background: rgba(39, 98, 216, 0.1);
+}
+
+.rhythm-measure-detail-pick:focus-visible {
+  outline: 2px solid #2762d8;
+  outline-offset: 1px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rhythm-measure-detail-pick:hover {
+    background: rgba(39, 98, 216, 0.14);
+  }
 }
 
 .rhythm-measure-detail-title small {
@@ -5220,13 +5360,129 @@ onBeforeUnmount(() => {
   font: 800 var(--text-section)/1 var(--display);
 }
 
+.rhythm-measure-detail-title i { /* changed: дробление доли рядом с номером */
+  color: #8a99b6;
+  font: 650 var(--text-caption)/1 var(--ui);
+  font-style: normal;
+}
+
+.rhythm-measure-detail-title em { /* changed: метка такта под бегунком */
+  margin-left: auto;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #e53935;
+  color: #fff;
+  font: 800 var(--text-caption)/1 var(--mono);
+  font-style: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/*
+ * «В линию»: такты стоят рядом, как системы в нотном стане. Колонка подписей
+ * рисуется один раз — в первом такте, между тактами идёт тактовая черта.
+ * Если отрезок не влезает по ширине, полоса прокручивается: линия остаётся
+ * линией, а не разваливается на столбик.
+ */
+.rhythm-detail-measures.is-line { /* changed: новый формат разбора */
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding-bottom: 4px;
+  overflow-x: auto;
+}
+
+.rhythm-detail-measures.is-line > .rhythm-measure-detail {
+  /* Ширина такта пропорциональна числу позиций счёта, а не «поровну»: такт
+     на 6 позиций не должен быть уже такта на 4. */
+  flex: var(--rhythm-measure-cells, 1) 1 0;
+  min-width: calc(var(--rhythm-measure-cells, 1) * 38px);
+  padding: 0;
+  border-radius: 0;
+}
+
+.rhythm-detail-measures.is-line > .rhythm-measure-detail:first-child {
+  /* Подписи рук живут внутри первого такта. Их 96 px добавляем сверх доли,
+     иначе первый такт оказался бы уже соседей ровно на эту колонку. */
+  flex-basis: 96px;
+  min-width: calc(96px + var(--rhythm-measure-cells, 1) * 38px);
+}
+
+.rhythm-detail-measures.is-line > .rhythm-measure-detail.is-focused {
+  background: rgba(226, 236, 255, 0.72);
+  box-shadow: none;
+}
+
+.rhythm-detail-measures.is-line .rhythm-measure-detail-title {
+  /* Фиксированная высота строки номеров: чип «сейчас» не должен сдвигать
+     сетку соседних тактов относительно текущего. */
+  min-height: 30px;
+  padding: 0 8px 6px;
+  white-space: nowrap;
+}
+
+.rhythm-detail-measures.is-line
+  > .rhythm-measure-detail:first-child
+  .rhythm-measure-detail-title {
+  /* Номер встаёт над первой долей такта, а не над колонкой подписей. */
+  padding-left: 104px;
+}
+
+.rhythm-detail-measures.is-line .rhythm-measure-detail-title i {
+  display: none;
+}
+
+.rhythm-detail-measures.is-line .rhythm-detail-grid {
+  border-left-width: 0;
+  border-radius: 0;
+}
+
+.rhythm-detail-measures.is-line
+  > .rhythm-measure-detail:not(:first-child)
+  .rhythm-detail-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.rhythm-detail-measures.is-line
+  > .rhythm-measure-detail:first-child
+  .rhythm-detail-grid {
+  border-left: 1px solid rgba(70, 107, 183, 0.12);
+  border-radius: 12px 0 0 12px;
+}
+
+.rhythm-detail-measures.is-line
+  > .rhythm-measure-detail:last-child
+  .rhythm-detail-grid {
+  border-radius: 0 12px 12px 0;
+}
+
+/* Тактовая черта: граница между тактами заметно толще деления долей. */
+.rhythm-detail-measures.is-line
+  > .rhythm-measure-detail
+  + .rhythm-measure-detail
+  .rhythm-detail-grid {
+  border-left: 2px solid rgba(45, 84, 160, 0.4);
+}
+
+.rhythm-detail-measures.is-line .rhythm-spoken-subgrid b {
+  /* В линию колонка доли уже, чем в столбик: слог ужимается, но не режется. */
+  font-size: clamp(13px, 1vw, 20px);
+}
+
 .rhythm-detail-head {
   display: flex;
+  flex-wrap: wrap; /* changed: в шапке появился переключатель формата */
   align-items: end;
   justify-content: space-between;
-  gap: 20px;
+  gap: 12px 20px;
   padding: 0 2px 12px;
   border-bottom: 1px solid rgba(70, 107, 183, 0.12);
+}
+
+.rhythm-detail-layout { /* changed: выбор формата разбора */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .rhythm-detail-head span {
@@ -5251,6 +5507,13 @@ onBeforeUnmount(() => {
   margin: 0;
   color: #6e7f9e;
   font: 500 var(--text-label)/1.45 var(--ui);
+}
+
+.rhythm-detail-head p b { /* changed: подсказка про сквозной счёт по отрезку */
+  display: block;
+  margin-top: 4px;
+  color: #4a6299;
+  font-weight: 700;
 }
 
 .rhythm-detail-grid {
@@ -5915,7 +6178,78 @@ onBeforeUnmount(() => {
   }
 
   .rhythm-detail-measures {
-    gap: 16px;
+    gap: 12px; /* changed: на телефоне отрезок и так длинный */
+  }
+
+  /*
+   * На телефоне «в линию» физически не помещается: пять тактов по шесть
+   * позиций дают полосу в несколько экранов. Формат принудительно сводим к
+   * столбику и прячем переключатель, чтобы не предлагать нерабочий выбор.
+   */
+  .rhythm-detail-layout { /* changed */
+    display: none;
+  }
+
+  .rhythm-detail-measures.is-line { /* changed */
+    display: grid;
+    gap: 12px;
+    padding-bottom: 0;
+    overflow-x: visible;
+  }
+
+  .rhythm-detail-measures.is-line > .rhythm-measure-detail,
+  .rhythm-detail-measures.is-line > .rhythm-measure-detail:first-child {
+    flex: none;
+    min-width: 0;
+    padding: 4px 4px 6px;
+    border-radius: 14px;
+  }
+
+  .rhythm-detail-measures.is-line .rhythm-measure-detail-title,
+  .rhythm-detail-measures.is-line
+    > .rhythm-measure-detail:first-child
+    .rhythm-measure-detail-title {
+    padding: 6px 4px;
+    white-space: normal;
+  }
+
+  .rhythm-detail-measures.is-line .rhythm-measure-detail-title i {
+    display: block;
+  }
+
+  .rhythm-detail-measures.is-line .rhythm-detail-grid,
+  .rhythm-detail-measures.is-line
+    > .rhythm-measure-detail
+    + .rhythm-measure-detail
+    .rhythm-detail-grid,
+  .rhythm-detail-measures.is-line
+    > .rhythm-measure-detail:first-child
+    .rhythm-detail-grid,
+  .rhythm-detail-measures.is-line
+    > .rhythm-measure-detail:last-child
+    .rhythm-detail-grid {
+    border: 0;
+    border-radius: 0;
+  }
+
+  .rhythm-detail-measures.is-line .rhythm-spoken-subgrid b {
+    font-size: clamp(var(--text-section), 1.35vw, 20px);
+  }
+
+  .rhythm-measure-detail {
+    padding: 4px 4px 6px; /* changed */
+  }
+
+  /* Номер такта на телефоне остаётся видимым при прокрутке длинного отрезка. */
+  .rhythm-measure-detail-title { /* changed */
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    margin-inline: -4px;
+    padding: 6px 4px;
+    border-radius: 10px;
+    background: rgba(249, 251, 255, 0.94);
+    backdrop-filter: blur(6px);
   }
 
   .rhythm-detail-head {
