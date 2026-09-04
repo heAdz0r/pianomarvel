@@ -133,6 +133,7 @@ const HAND_SPANS = [
 type HandSpanValue = (typeof HAND_SPANS)[number]["value"];
 const selectedHandSpan = reactive<Record<number, HandSpanValue>>({});
 const handRulesOpen = reactive<Record<number, boolean>>({});
+const focusScores = reactive<Record<number, boolean>>({});
 
 const bulkReport = ref<BulkLearningResult[]>([]);
 const bulkReportExpanded = ref(false);
@@ -1224,7 +1225,11 @@ const RULE_LABELS: Record<string, string> = {
 
 const PATTERN_LABELS: Record<string, string> = {
   scale: "гамма",
-  fiveFinger: "пятипальцевая позиция",
+  fiveFinger: "устойчивая позиция руки",
+  positionContinuity: "сохранение позиции",
+  unreachableRepeat: "перенос пальца",
+  repeatAlternation: "чередование на повторе",
+  repeatSame: "повтор тем же пальцем",
   arpeggio: "арпеджио",
   alberti: "альбертиев бас",
   ostinato: "повторяющаяся фигура",
@@ -1275,6 +1280,14 @@ const NOTE_NAMES = ["до", "до♯", "ре", "ми♭", "ми", "фа", "фа�
 
 function noteName(midi: number): string {
   return `${NOTE_NAMES[((midi % 12) + 12) % 12]}${Math.floor(midi / 12) - 1}`;
+}
+
+function toggleScoreFocus(id: number): void {
+  focusScores[id] = !focusScores[id];
+  requestAnimationFrame(() => {
+    document.querySelector<HTMLElement>(`#piece-${id}-fingering-panel .fg-score-workspace`)
+      ?.scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  });
 }
 
 function activeTab(id: number): PanelTab {
@@ -2984,6 +2997,7 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
                       role="tabpanel"
                       :aria-labelledby="`piece-${row.original.id}-fingering-tab`"
                       class="panel-page fingering-page"
+                      :class="{ 'is-score-focused': focusScores[row.original.id] }"
                       tabindex="-1"
                     >
                       <p
@@ -3007,15 +3021,14 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
                         :aria-labelledby="`piece-${row.original.id}-fingering-actions-title`"
                       >
                         <div class="fg-workbench-copy">
-                          <span class="fg-state">Работа с MusicXML</span>
+                          <span class="fg-state">Мастерская аппликатуры</span>
                           <h3 :id="`piece-${row.original.id}-fingering-actions-title`">
-                            Аппликатура в Piano Marvel
+                            Найдите удобное движение
                           </h3>
                           <p>
-                            Ноты ниже уже пересчитаны при открытии. Одна кнопка соберёт актуальный
-                            MXL в подпапке <span class="mono">fingered</span> и заменит нотный
-                            файл этой композиции в Piano Marvel. Авторские цифры сохранятся,
-                            недостающие будут добавлены; исходник не изменится.
+                            Проверьте предложенные пальцы в контексте фразы и подберите размер кисти.
+                            Авторские цифры сохраняются. Кнопка справа заменит ноты этой композиции
+                            в Piano Marvel проверенной вами версией.
                           </p>
                         </div>
                         <div class="fg-actions" role="group" aria-label="Действия с аппликатурой">
@@ -3132,6 +3145,11 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
                           @keydown="onScoreNavigationKey(row.original.id, report, $event)"
                         >
                           <header class="fg-score-toolbar">
+                            <button type="button" class="fg-focus-toggle"
+                              :aria-pressed="Boolean(focusScores[row.original.id])"
+                              @click="toggleScoreFocus(row.original.id)">
+                              {{ focusScores[row.original.id] ? "Все инструменты" : "Сосредоточиться на нотах" }}
+                            </button>
                             <div class="fg-score-title">
                               <span class="fg-state">Партитура с аппликатурой</span>
                               <strong aria-live="polite" aria-atomic="true">

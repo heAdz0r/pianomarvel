@@ -1,19 +1,9 @@
-/*
- * motion.ts — кинетический слой в духе Payard / awwwards.
- * Самодостаточный, без зависимостей. Всё поведение навешивается на уже
- * существующие классы разметки; декоративный DOM (grain, marquee,
- * индикатор прогресса) модуль создаёт сам. Идемпотентно (повторный вызов
- * не дублирует), уважает prefers-reduced-motion и pointer:fine.
- *
- * ВАЖНО: скрытое (opacity:0) состояние reveal живёт под селектором
- * `html.motion .reveal` — класс `motion` добавляется только когда анимации
- * реально включены. Если JS не выполнится, контент останется видимым.
- *
- * Стили импортируем ЗДЕСЬ, а не через @import в style.css: style.css
- * переписывается параллельным дизайн-процессом и затирает наш импорт.
- * Привязка CSS к модулю делает слой самодостаточным и устойчивым к этому.
+/**
+ * Short reveal transitions and navigation feedback.
+ * Content stays visible without JavaScript; reduced-motion disables animation.
+ * Styles are loaded by style.css so the studio layer has a predictable order.
  */
-import "./styles/motion.css";
+
 
 let started = false;
 
@@ -22,7 +12,7 @@ export function initMotion(): void {
   started = true;
 
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const finePointer = matchMedia("(pointer: fine)").matches;
+
 
   // Функциональные части работают всегда (плавность уважает reduce внутри).
   setupNavSpy(reduce);
@@ -31,62 +21,7 @@ export function initMotion(): void {
   if (reduce) return; // дальше — только анимация/декор
 
   document.documentElement.classList.add("motion");
-  injectDecor();
   setupReveal();
-  setupParallax();
-  if (finePointer) {
-    setupMagnetic();
-  }
-}
-
-/* ─────────────────────────── Декор ─────────────────────────── */
-function injectDecor(): void {
-  const body = document.body;
-
-  // 1. Зерно (SVG feTurbulence) — премиальная фактура поверх всего.
-  if (!document.querySelector(".fx-grain")) {
-    const grain = document.createElement("div");
-    grain.className = "fx-grain";
-    grain.setAttribute("aria-hidden", "true");
-    body.appendChild(grain);
-  }
-
-  // 2. Индикатор прогресса скролла — тонкая линия сверху.
-  if (!document.querySelector(".fx-progress")) {
-    const bar = document.createElement("div");
-    bar.className = "fx-progress";
-    bar.setAttribute("aria-hidden", "true");
-    bar.innerHTML = "<i></i>";
-    body.appendChild(bar);
-    const fill = bar.querySelector("i") as HTMLElement;
-    const onScroll = () => {
-      const h = document.documentElement.scrollHeight - innerHeight;
-      fill.style.transform = `scaleX(${h > 0 ? scrollY / h : 0})`;
-    };
-    addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-  }
-
-  // 3. Бегущая строка форматов между hero и потоком — декор + подсказка.
-  ensureMarquee();
-}
-
-/*
- * Маркиза живёт внутри .app (Vue-поддерево), поэтому асинхронный ре-рендер Vue
- * может её удалить. Держим её самовосстанавливающейся: инъекцию повторяет
- * MutationObserver из setupReveal, если узел пропал.
- */
-function ensureMarquee(): void {
-  const hero = document.querySelector(".hero");
-  if (!hero || document.querySelector(".fx-marquee")) return;
-  const items = ["MIDI", "MUSICXML", "PDF", "AUDIO", "COVER", "LEARN MODE", "ADAPTIVE"];
-  const line = items.map((x) => `<span>${x}</span><em>✳</em>`).join("");
-  const marquee = document.createElement("div");
-  marquee.className = "fx-marquee"; // без reveal: узел может пере-инжектиться, не должен застрять скрытым
-  marquee.setAttribute("aria-hidden", "true");
-  // Дублируем ленту дважды — для бесшовной прокрутки в keyframes.
-  marquee.innerHTML = `<div class="fx-marquee-track">${line}${line}</div>`;
-  hero.insertAdjacentElement("afterend", marquee);
 }
 
 /* ─────────────────────── Reveal при скролле ─────────────────────── */
@@ -102,16 +37,10 @@ function setupReveal(): void {
     },
     { rootMargin: "0px 0px -8% 0px", threshold: 0.08 },
   );
-  const marqueeIo = new IntersectionObserver((entries) => {
-    for (const entry of entries) {
-      entry.target.classList.toggle("is-paused", !entry.isIntersecting);
-    }
-  });
-
   // Hero НЕ включаем: он на первом экране и должен появляться сразу
   // (иначе на медленной загрузке мелькнёт размытие до срабатывания IO).
   const SELECTOR =
-    ".fx-marquee, .flow-step-tag, .source-switch, " +
+    ".flow-step-tag, .source-switch, " +
     ".movement, .session-movement, .colophon, .piece-table tbody tr";
 
   const attach = (el: HTMLElement, i = 0) => {
@@ -123,7 +52,7 @@ function setupReveal(): void {
     // Небольшой стагер для строк таблицы и групповых элементов.
     if (i) el.style.setProperty("--reveal-delay", `${Math.min(i, 8) * 55}ms`);
     io.observe(el);
-    if (el.classList.contains("fx-marquee")) marqueeIo.observe(el);
+
   };
 
   const scan = (root: ParentNode) => {
@@ -152,13 +81,12 @@ function setupReveal(): void {
   armFailsafe();
 
   // Библиотека (PiecesMovement) монтируется по условию v-if — ловим её появление.
-  // Заодно восстанавливаем маркизу, если Vue-патч удалил её из .app. Vue может
-  // добавить сотни строк одной пачкой: сканируем их не чаще одного раза за frame.
+  // Vue может добавить сотни строк: сканируем не чаще одного раза за frame.
   const pendingRoots = new Set<HTMLElement>();
   let scanFrame: number | undefined;
   const flush = () => {
     scanFrame = undefined;
-    ensureMarquee();
+
     pendingRoots.forEach((root) => scan(root));
     pendingRoots.clear();
     armFailsafe();
@@ -175,82 +103,23 @@ function setupReveal(): void {
   mo.observe(document.body, { childList: true, subtree: true });
 }
 
-/* ─────────────────────────── Parallax ─────────────────────────── */
-function setupParallax(): void {
-  const hero = document.querySelector<HTMLElement>(".hero");
-  const copy = document.querySelector<HTMLElement>(".hero-copy");
-  const score = document.querySelector<HTMLElement>(".hero-score");
-  if (!hero) return;
-
-  let ticking = false;
-  const update = () => {
-    ticking = false;
-    const y = scrollY;
-    const p = Math.max(0, Math.min(1, y / (hero.offsetHeight || 1)));
-    // ♭-глиф (hero-copy::after) и кольцо (hero-score::before) движутся с разной скоростью.
-    copy?.style.setProperty("--par", `${p * 120}px`);
-    score?.style.setProperty("--par", `${p * -70}px`);
-  };
-  const onScroll = () => {
-    if (!ticking) {
-      ticking = true;
-      requestAnimationFrame(update);
-    }
-  };
-  addEventListener("scroll", onScroll, { passive: true });
-  update();
-}
-
-/* ─────────────────────── Магнитные кнопки ─────────────────────── */
-function setupMagnetic(): void {
-  const targets = document.querySelectorAll<HTMLElement>(
-    ".topbar-cta, .brand-mark, .library-refresh",
-  );
-  targets.forEach((el) => {
-    if (el.dataset.magnetic) return;
-    el.dataset.magnetic = "1";
-    const strength = el.classList.contains("btn") ? 0.35 : 0.5;
-    const onMove = (ev: PointerEvent) => {
-      const r = el.getBoundingClientRect();
-      const dx = ev.clientX - (r.left + r.width / 2);
-      const dy = ev.clientY - (r.top + r.height / 2);
-      el.style.transform = `translate(${dx * strength}px, ${dy * strength}px)`;
-    };
-    const reset = () => (el.style.transform = "");
-    el.addEventListener("pointermove", onMove);
-    el.addEventListener("pointerleave", reset);
-  });
-}
-
-/* ─────────────── Scrollspy + плавный переход по якорям ─────────────── */
+/* ─────────────────────────── Navigation ─────────────────────────── */
 function setupNavSpy(reduce: boolean): void {
-  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>(".topbar-links a"));
-  if (!links.length) return;
+  const nav = document.querySelector<HTMLElement>(".topbar-links");
+  if (!nav) return;
+  const links = () => Array.from(nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'));
+  const targetOf = (link: HTMLAnchorElement) =>
+    document.getElementById(link.hash.slice(1));
 
-  // Порядок ссылок: Собрать · Войти · Издать · Обучать.
-  const resolve = (): (HTMLElement | null)[] => {
-    const flows = document.querySelectorAll<HTMLElement>(".movements .flow-step");
-    return [
-      flows[0] ?? document.querySelector(".movements"),
-      flows[1] ?? null,
-      document.querySelector(".metadata-movement"),
-      document.querySelector(".library-movement"),
-    ];
-  };
-
-  links.forEach((link, i) => {
-    const go = () => {
-      const target = resolve()[i];
-      if (!target) return;
-      target.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-    };
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-      go();
-    });
+  // Delegation also handles the library link mounted after sign-in.
+  nav.addEventListener("click", (event) => {
+    const link = (event.target as Element).closest<HTMLAnchorElement>('a[href^="#"]');
+    if (!link || !nav.contains(link)) return;
+    const target = targetOf(link);
+    if (!target) return;
+    event.preventDefault();
+    target.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
   });
-
-  let sections = resolve();
   const observed = new Set<HTMLElement>();
 
   // Подсветка активной секции.
@@ -258,15 +127,13 @@ function setupNavSpy(reduce: boolean): void {
     (entries) => {
       for (const e of entries) {
         if (!e.isIntersecting) continue;
-        const idx = sections.findIndex((section) => section === e.target);
-        if (idx >= 0) links.forEach((l, j) => l.classList.toggle("active", j === idx));
+        links().forEach((link) => link.classList.toggle("active", targetOf(link) === e.target));
       }
     },
     { rootMargin: "-45% 0px -45% 0px" },
   );
   const observeAll = () => {
-    sections = resolve();
-    sections.forEach((section) => {
+    links().map(targetOf).forEach((section) => {
       if (!section || observed.has(section)) return;
       observed.add(section);
       spy.observe(section);

@@ -14,7 +14,7 @@ export const FINGERING_SEARCH = {
   /** Быстрый повтор ноты — чередование пальцев вместо повторения одного. */
   fastRepeat: 0.5,
   /** Ширина луча динамического поиска. */
-  beam: 64,
+  beam: 128,
 } as const;
 
 export interface FingeringPattern {

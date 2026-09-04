@@ -11,6 +11,7 @@ import {
   type SpanTables,
 } from "./fingering-model";
 import { findCycles } from "./fingering-motifs";
+import { applyPositionFrame } from "./fingering-frames";
 import type { ParsedNote, ParsedScore } from "./fingering-score";
 import {
   FINGERING_SEARCH,
@@ -196,6 +197,14 @@ export function detectPatterns(
 
   let index = 0;
   while (index < events.length) {
+    const frame = applyPositionFrame(events, index, hand, tables, weights, hints, PEDAGOGY.priors.fiveFinger);
+    if (frame > 0) {
+      patterns.push({ kind: "fiveFinger", hand, fromMeasure: events[index].measureIndex,
+        toMeasure: events[index + frame - 1].measureIndex, label: "единая позиция повторяющейся фигуры" });
+      cover(index, frame);
+      index += frame;
+      continue;
+    }
     const fiveFinger = applyFiveFingerCellHint(events, single, index, hand, hints);
     if (fiveFinger > 0) {
       patterns.push({
@@ -695,6 +704,14 @@ function applyArpeggioFragmentHint(
   hand: Hand,
   hints: Map<number, Hint>,
 ): boolean {
+  // A direction change or a barline alone does not isolate a musical fragment.
+  const before = events[start];
+  const after = events[start + length];
+  const startsPhrase = start === 0 || before.hardBreakBefore ||
+    before.gapBefore >= FINGERING_SEARCH.resetGap;
+  const endsPhrase = !after || after.hardBreakBefore ||
+    after.gapBefore >= FINGERING_SEARCH.resetGap;
+  if (!startsPhrase || !endsPhrase) return false;
   const notes = single.slice(start, start + length) as number[];
   const pitchClasses = new Set(notes.map((midi) => ((midi % 12) + 12) % 12));
   if (chordRoot(pitchClasses) === undefined) return false;

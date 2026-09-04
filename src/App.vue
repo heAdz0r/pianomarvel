@@ -526,9 +526,9 @@ function reset() {
         </a>
         <div class="topbar-links">
           <a href="#upload-flow">Собрать</a>
-          <a href="#login">Войти</a>
+          <a href="#session">{{ loggedIn ? "Аккаунт" : "Войти" }}</a>
           <a href="#publish">Издать</a>
-          <a href="#library">Обучать</a>
+          <a v-if="loggedIn" href="#library">Библиотека</a>
         </div>
         <a class="topbar-cta" href="#upload-flow">
           Начать <UiIcon name="arrow-down" :size="16" />
@@ -536,82 +536,24 @@ function reset() {
       </nav>
     </div>
 
-    <header id="top" class="hero" :class="`hero--${sourceMode}`">
-      <div class="hero-copy">
-        <div class="hero-index" aria-hidden="true">
-          <span>01—03</span>
-          <i />
-          <span>Digital score desk</span>
+    <header id="top" class="studio-intro">
+      <div class="studio-intro-copy">
+        <p class="studio-eyebrow"><span class="studio-dot" /> МЕСТО ДЛЯ МУЗЫКИ</p>
+        <h1>От первых нот<br /><span>к свободной игре.</span></h1>
+        <p class="studio-description">Ваши партитуры, аппликатура и разбор сложных мест — в одном рабочем пространстве.</p>
+        <div class="studio-actions">
+          <a class="studio-primary" href="#upload-flow">
+            Добавить произведение <UiIcon name="arrow-down" :size="18" />
+          </a>
+          <a v-if="loggedIn" class="studio-secondary" href="#library">
+            Моя библиотека <span aria-hidden="true">↗</span>
+          </a>
         </div>
-        <!-- CHANGED: тот же слайдер, что и в шапке — вариант для цветной плоскости. -->
-        <ModeSwitch
-          class="hero-mode-switch"
-          variant="hero"
-          label="Источник композиции"
-          controls="hero-mode-copy"
-          captions
-          :options="SOURCE_MODES"
-          :model-value="sourceMode"
-          @update:model-value="sourceMode = $event as 'local' | 'musescore'"
-        />
-        <div id="hero-mode-copy" class="hero-mode-copy" role="tabpanel">
-            <div class="eyebrow">
-              <span class="dyn">{{ sourceMode === "musescore" ? "01" : "02" }}</span>
-              {{ sourceMode === "musescore" ? "Всемирная библиотека партитур" : "Автоматическая сборка с диска" }}
-            </div>
-            <h1>
-              <span>{{ sourceMode === "musescore" ? "Найти" : "Собрать" }}</span>
-              <em class="hero-wordmark" :class="`is-${sourceMode}`">
-                <i>{{ sourceMode === "musescore" ? "MUSE" : "С" }}</i>
-                <b>{{ sourceMode === "musescore" ? "SCORE" : "ДИСКА" }}</b>
-              </em>
-            </h1>
-            <p class="subtitle">
-              {{
-                sourceMode === "musescore"
-                  ? "Введите название или ссылку — мы найдём партитуру, импортируем файлы и подготовим цифровое издание."
-                  : "Выберите один локальный файл — MIDI, MusicXML, PDF, аудио и обложка с тем же именем найдутся автоматически."
-              }}
-            </p>
-            <div class="hero-actions">
-              <a class="hero-primary-action" href="#upload-flow">
-                <span>Начать загрузку</span>
-                <UiIcon name="arrow-down" :size="18" />
-              </a>
-              <a class="hero-secondary-action" href="#upload-flow">
-                К маршруту <span aria-hidden="true">↘</span>
-              </a>
-            </div>
-          </div>
       </div>
-      <div class="hero-score">
-        <div class="hero-score-meta">
-          <span>{{ sourceMode === "musescore" ? "Score discovery" : "Local intake" }}</span>
-          <span>Live preview</span>
-        </div>
-        <div class="hero-score-stage">
-          <span class="hero-score-stage-label">
-            {{ sourceMode === "musescore" ? "Каталог найден · готов к импорту" : "Комплект найден · готов к проверке" }}
-          </span>
-          <FurEliseStaff />
-        </div>
-        <div class="hero-score-route" aria-hidden="true">
-          <span class="is-current">{{ sourceMode === "musescore" ? "Поиск" : "Файлы" }}</span>
-          <i />
-          <span>Проверка</span>
-          <i />
-          <span>Издание</span>
-        </div>
-        <div class="hero-score-footer">
-          <p>
-            {{ sourceMode === "musescore" ? "Партитура" : "Один файл." }}<br />
-            <em>{{ sourceMode === "musescore" ? "без трения." : "Весь комплект." }}</em>
-          </p>
-          <span>
-            {{ sourceMode === "musescore" ? "Поиск · импорт · публикация" : "MIDI · XML · PDF · AUDIO" }}<br />
-            {{ sourceMode === "musescore" ? "без ручной рутины" : "совпадения найдём сами" }}
-          </span>
-        </div>
+      <div class="studio-score" aria-label="Пример нотной записи: К Элизе">
+        <div class="studio-score-heading"><span>НА ПЮПИТРЕ</span><span>01 / Beethoven</span></div>
+        <FurEliseStaff />
+        <div class="studio-score-caption"><strong>Für Elise</strong><span>Фрагмент партитуры · 3/8</span></div>
       </div>
     </header>
 
@@ -648,7 +590,7 @@ function reset() {
         </div>
       </div>
 
-      <div class="flow-step">
+      <div id="session" class="flow-step">
         <p class="flow-step-tag">Шаг 2 · обязательно · вход в Piano Marvel</p>
         <AuthMovement
           :state="loginState"

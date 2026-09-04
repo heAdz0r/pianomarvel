@@ -33,6 +33,7 @@ import {
 } from "./fingering-model";
 import { isPlayable, parseScore, type ParsedNote, type ParsedScore } from "./fingering-score";
 import { PEDAGOGY, detectPatterns } from "./fingering-patterns";
+import { futureCosts, positionContext, type PositionTouch } from "./fingering-context";
 import { consolidateMotifs, consolidateRecurrences } from "./fingering-motifs";
 import {
   FINGERING_SEARCH,
@@ -988,6 +989,7 @@ interface SearchState {
   previousKey: string | null;
   candidate: number;
   previousCandidate: number;
+  touches: PositionTouch[];
   held: HeldFinger[];
   step: StepCost;
 }
@@ -1070,6 +1072,7 @@ interface StepCost {
 
 interface TransitionResult {
   step: StepCost;
+  touches: PositionTouch[];
   held: HeldFinger[];
 }
 
@@ -1296,6 +1299,14 @@ function solveHand(
       }
     }
 
+    const context = positionContext(
+      previousState?.touches ?? [], event, assign, hand, tables,
+      Boolean(hint?.freeBefore && hintMatched && !event.slurredBefore),
+    );
+    if (context.cost) {
+      extra += context.cost;
+      adjustments.push({ kind: "positionContinuity", points: context.cost });
+    }
     held.push(
       ...event.notes
         .filter((note) => note.duration > 0)
@@ -1309,20 +1320,42 @@ function solveHand(
         })),
     );
     held.sort((left, right) => left.noteIndex - right.noteIndex);
-    return { step: { parts, extra, adjustments, weights: stepWeights }, held };
+    return { step: { parts, extra, adjustments, weights: stepWeights }, held, touches: context.touches };
   };
+
+  // Rank partial paths by an estimate of the entire remaining score, across bars.
+  // This pairwise relaxation omits held-note and three-note constraints; the
+  // forward solver remains authoritative and this potential is not a guarantee.
+  const future = futureCosts(candidates.map(set => set.length), (k, fromIndex, toIndex) => {
+    const previous = events[k - 1];
+    const event = events[k];
+    const assign = candidates[k][toIndex];
+    const from = candidates[k - 1][fromIndex];
+    const parts = verticalParts(tables, hand, event, assign, voiceSplit[k]);
+    const hint = hints.get(event.index);
+    const matched = hint && (hint.fingers
+      ? hint.fingers.every((finger, i) => finger === assign[i])
+      : assign.length === 1 && hint.finger === assign[0]);
+    if (!event.hardBreakBefore && event.gapBefore < FINGERING_SEARCH.resetGap &&
+        !(matched && hint.freeBefore && !event.slurredBefore)) {
+      addParts(parts, horizontalParts(tables, hand, chainOf(previous, from),
+        chainOf(event, assign), isBlockTransfer(previous, event)));
+    }
+    return weigh(parts, tempoWeights(weights, event.ipiBefore)) + (matched ? hint.bonus : 0);
+  });
 
   let layer = new Map<string, SearchState>();
   for (let candidate = 0; candidate < candidates[0].length; candidate += 1) {
     const result = transition(0, candidate, undefined);
     if (!result) continue;
-    const key = stateKey(-1, candidate, result.held);
+    const key = stateKey(-1, candidate, result.held, result.touches);
     layer.set(key, {
       key,
       cost: stepValue(result.step, weights),
       previousKey: null,
       candidate,
       previousCandidate: -1,
+      touches: result.touches,
       held: result.held,
       step: result.step,
     });
@@ -1337,7 +1370,7 @@ function solveHand(
         if (!result) continue;
         const cost = state.cost + stepValue(result.step, weights);
         if (!Number.isFinite(cost)) continue;
-        const key = stateKey(state.candidate, candidate, result.held);
+        const key = stateKey(state.candidate, candidate, result.held, result.touches);
         const existing = next.get(key);
         if (
           !existing ||
@@ -1351,6 +1384,7 @@ function solveHand(
             previousKey: state.key,
             candidate,
             previousCandidate: state.candidate,
+            touches: result.touches,
             held: result.held,
             step: result.step,
           });
@@ -1385,7 +1419,8 @@ function solveHand(
           key: events[k].keys[index],
           end: note.onset + note.duration,
         }));
-        const key = stateKey(-1, candidate, held);
+        const touches = positionContext([], events[k], candidates[k][candidate], hand, tables).touches;
+        const key = stateKey(-1, candidate, held, touches);
         next.set(key, {
           key,
           cost: (previous?.cost ?? 0) + stepValue(step, weights),
@@ -1393,11 +1428,12 @@ function solveHand(
           candidate,
           previousCandidate: -1,
           held,
+          touches,
           step,
         });
       }
     }
-    layer = prune(next, FINGERING_SEARCH.beam);
+    layer = prune(next, FINGERING_SEARCH.beam, future[k]);
     history.push(layer);
   }
 
@@ -1468,21 +1504,23 @@ function stepValue(step: StepCost, weights: RuleWeights): number {
   return weigh(step.parts, step.weights ?? weights) + step.extra;
 }
 
-function stateKey(previous: number, candidate: number, held: HeldFinger[]): string {
+function stateKey(previous: number, candidate: number, held: HeldFinger[], touches: PositionTouch[]): string {
   const active = held
     .map((item) => `${item.noteIndex}:${item.finger}`)
     .sort()
     .join(",");
-  return `${previous}|${candidate}|${active}`;
+  const position = touches.map(touch => `${touch.voice}:${touch.key.midi}:${touch.finger}:${touch.onset}`).join(",");
+  return `${previous}|${candidate}|${active}|${position}`;
 }
 
 function fingerSum(assign: Finger[]): number {
   return assign.reduce((total, finger) => total + finger, 0);
 }
 
-function prune(states: Map<string, SearchState>, beam: number): Map<string, SearchState> {
+function prune(states: Map<string, SearchState>, beam: number, future: number[]): Map<string, SearchState> {
   if (states.size <= beam) return states;
-  const sorted = [...states.values()].sort((left, right) => left.cost - right.cost || left.key.localeCompare(right.key));
+  const sorted = [...states.values()].sort((left, right) =>
+    (left.cost + future[left.candidate]) - (right.cost + future[right.candidate]) || left.key.localeCompare(right.key));
   return new Map(sorted.slice(0, beam).map((state) => [state.key, state]));
 }
 

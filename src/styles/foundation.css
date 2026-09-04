@@ -16,21 +16,21 @@
   color-scheme: light;
 
   /* Поверхности: base — страница, surface — карточка, raised/sunken — акценты. */
-  --bg-base: #f3f7ff;
+  --bg-base: #f6f5f1;
   --bg-surface: #ffffff;
-  --bg-raised: #eef4ff;
-  --bg-sunken: #dce8ff;
+  --bg-raised: #eeeee9;
+  --bg-sunken: #e2e5e9;
 
   /* Текст по убыванию силы. Контраст к --bg-base и --bg-surface проверяет bun test. */
-  --fg-strong: #071d50;
-  --fg: #21427f;
-  --fg-muted: #4a6390;
+  --fg-strong: #202a35;
+  --fg: #384653;
+  --fg-muted: #596572;
   --fg-subtle: #5d73a0;
 
   /* Акцентная рампа — единственный источник фирменного синего. */
   --accent-300: #7ea4ff;
   --accent-400: #4f82ff;
-  --accent-500: #1557ff;
+  --accent-500: #2454c6;
   --accent-600: #0b45d8;
   --accent-700: #07349f;
 
@@ -84,7 +84,7 @@
      index.html. Прежние "Instrument Serif" и "Inter" не подключались никогда и
      всегда перекрывались — при смене порядка @import интерфейс молча уехал бы на
      Georgia и system-ui. */
-  --display: "Unbounded", "Manrope", sans-serif;
+  --display: "Manrope", system-ui, sans-serif;
   --ui: "Manrope", system-ui, -apple-system, sans-serif;
   --mono: "Space Mono", ui-monospace, "SFMono-Regular", monospace;
 
