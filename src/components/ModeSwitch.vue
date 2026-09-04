@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // CHANGED: единый слайдер выбора режима. Одна механика каретки и одна типографика
 // для дока в шапке и для переключателя в hero — вместо двух разных контролов.
-import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import UiIcon from "./UiIcon.vue";
 
 type IconName = InstanceType<typeof UiIcon>["$props"]["name"];
@@ -33,20 +33,6 @@ const activeIndex = computed(() => {
   return index < 0 ? 0 : index;
 });
 
-// CHANGED: короткий флаг «каретка в пути» — на нём висят squash, блик и поп иконки.
-const shifting = ref(false);
-let shiftTimer: ReturnType<typeof setTimeout> | undefined;
-
-watch(activeIndex, () => {
-  shifting.value = true;
-  if (shiftTimer) clearTimeout(shiftTimer);
-  shiftTimer = setTimeout(() => (shifting.value = false), 460);
-});
-
-onBeforeUnmount(() => {
-  if (shiftTimer) clearTimeout(shiftTimer);
-});
-
 const tabs = ref<HTMLButtonElement[]>([]);
 
 function select(value: string) {
@@ -73,7 +59,7 @@ function onKeydown(event: KeyboardEvent, index: number) {
 <template>
   <div
     class="mode-switch"
-    :class="[`mode-switch--${variant}`, { 'is-shifting': shifting, 'has-captions': captions }]"
+    :class="[`mode-switch--${variant}`, { 'has-captions': captions }]"
     :style="{ '--ms-count': options.length, '--ms-index': activeIndex }"
     role="tablist"
     :aria-label="label"
@@ -122,7 +108,7 @@ function onKeydown(event: KeyboardEvent, index: number) {
   --ms-pad: 6px;
   --ms-radius: 16px;
   --ms-item-h: 44px;
-  --ms-motion: 0.62s;
+  --ms-motion: var(--motion-state);
   position: relative;
   display: grid;
   grid-auto-flow: column;
@@ -154,23 +140,6 @@ function onKeydown(event: KeyboardEvent, index: number) {
   transition: transform var(--ms-motion) var(--spring);
 }
 
-/* Лёгкий squash на ходу — контрол «живой», а не просто перекрашивается. */
-.mode-switch.is-shifting .ms-thumb-face {
-  transform: scaleX(1.055) scaleY(0.94);
-}
-
-.ms-thumb-face::after {
-  content: "";
-  position: absolute;
-  inset: -20% -40%;
-  background: linear-gradient(102deg, transparent 24%, rgba(255, 255, 255, 0.6) 50%, transparent 76%);
-  opacity: 0;
-}
-
-.mode-switch.is-shifting .ms-thumb-face::after {
-  animation: ms-sheen 0.72s var(--ease);
-}
-
 .ms-clip {
   position: absolute;
   inset: 0;
@@ -193,9 +162,6 @@ function onKeydown(event: KeyboardEvent, index: number) {
   transition: transform var(--ms-motion) var(--spring);
 }
 
-.mode-switch.is-shifting .ms-ghost .ui-icon {
-  animation: ms-pop 0.6s var(--spring);
-}
 
 .ms-item {
   display: flex;
@@ -209,7 +175,7 @@ function onKeydown(event: KeyboardEvent, index: number) {
   background: transparent;
   font-family: var(--ui);
   font-size: var(--text-caption);
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: -0.015em;
   text-align: left;
   white-space: nowrap;
@@ -269,7 +235,7 @@ function onKeydown(event: KeyboardEvent, index: number) {
   --ms-idle: var(--muted);
   --ms-on: #ffffff;
   background: var(--panel-2);
-  box-shadow: inset 0 0 0 1px rgba(7, 29, 80, 0.07);
+  box-shadow: inset 0 0 0 1px rgba(var(--ink-rgb), 0.07);
 }
 
 .mode-switch--dock .ms-item {
@@ -282,7 +248,7 @@ function onKeydown(event: KeyboardEvent, index: number) {
 
 .mode-switch--dock .ms-thumb {
   box-shadow:
-    0 8px 20px rgba(21, 87, 255, 0.26),
+    0 8px 20px rgba(var(--accent-rgb), 0.26),
     inset 0 1px 0 rgba(255, 255, 255, 0.32);
 }
 
@@ -312,7 +278,7 @@ function onKeydown(event: KeyboardEvent, index: number) {
 }
 
 .mode-switch--hero .ms-thumb {
-  box-shadow: 0 10px 24px rgba(4, 31, 95, 0.22);
+  box-shadow: var(--shadow-card);
 }
 
 .mode-switch--hero .ms-thumb-face {
@@ -325,29 +291,6 @@ function onKeydown(event: KeyboardEvent, index: number) {
 
 .mode-switch--hero:has(.ms-item:focus-visible) {
   outline-color: #ffffff;
-}
-
-@keyframes ms-sheen {
-  0% {
-    opacity: 0;
-    transform: translate3d(-55%, 0, 0);
-  }
-  35% {
-    opacity: 0.7;
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(55%, 0, 0);
-  }
-}
-
-@keyframes ms-pop {
-  0% {
-    transform: rotate(-18deg) scale(0.84);
-  }
-  100% {
-    transform: none;
-  }
 }
 
 @media (max-width: 640px) {
@@ -369,14 +312,8 @@ function onKeydown(event: KeyboardEvent, index: number) {
     transition-duration: 0.01ms;
   }
 
-  .mode-switch.is-shifting .ms-thumb-face,
   .ms-item:hover .ui-icon {
     transform: none;
-  }
-
-  .mode-switch.is-shifting .ms-thumb-face::after,
-  .mode-switch.is-shifting .ms-ghost .ui-icon {
-    animation: none;
   }
 }
 </style>

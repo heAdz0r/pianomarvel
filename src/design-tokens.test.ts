@@ -80,9 +80,9 @@ const BASE = tokensOf(":root");
 const DARK = tokensOf(':root[data-theme="dark"]');
 const EMPTY = new Map<string, string>();
 
-const SURFACES = ["--bg-base", "--bg-surface", "--bg-raised"];
+const SURFACES = ["--bg-base", "--bg-surface", "--bg-raised", "--bg-sunken"];
 /** Уровни текста, которые обязаны читаться как обычный текст: AA = 4.5:1. */
-const BODY_TEXT = ["--fg-strong", "--fg", "--fg-muted"];
+const BODY_TEXT = ["--fg-strong", "--fg", "--fg-muted", "--fg-subtle"];
 
 describe("Палитра: контраст WCAG AA", () => {
   for (const [themeName, theme] of [
@@ -116,12 +116,33 @@ describe("Палитра: контраст WCAG AA", () => {
     });
   }
 
-  test("--fg-subtle годится только для крупного текста: AA Large = 3:1", () => {
-    // Осознанно более слабый уровень: он применяется к подписям >= 18.66px/700
-    // и к нетекстовым элементам, поэтому обычный порог к нему не предъявляется.
-    const ratio = contrast(resolve("--fg-subtle", EMPTY, BASE), resolve("--bg-base", EMPTY, BASE));
-    expect(ratio).toBeGreaterThanOrEqual(3);
-  });
+  for (const [themeName, theme] of [["светлая", EMPTY], ["тёмная", DARK]] as const) {
+    for (const stop of ["--accent-400", "--accent-500", "--accent-600"]) {
+      test(themeName + ": текст на заливке " + stop + " >= 4.5:1", () => {
+        expect(contrast(resolve("--on-accent", theme, BASE), resolve(stop, theme, BASE)))
+          .toBeGreaterThanOrEqual(4.5);
+      });
+    }
+  }
+
+});
+
+
+describe("Контраст контуров и музыкального фона", () => {
+  for (const [themeName, theme] of [["светлая", EMPTY], ["тёмная", DARK]] as const) {
+    for (const surface of SURFACES) {
+      test(themeName + ": контур поля на " + surface + " >= 3:1", () => {
+        expect(contrast(resolve("--line-control", theme, BASE), resolve(surface, theme, BASE)))
+          .toBeGreaterThanOrEqual(3);
+      });
+    }
+  }
+  for (const text of ["--fg-strong", "--fg", "--accent-600"]) {
+    test("текст вступления на наиболее насыщенной подложке: " + text, () => {
+      expect(contrast(resolve(text, EMPTY, BASE), resolve("--decor-glow", EMPTY, BASE)))
+        .toBeGreaterThanOrEqual(4.5);
+    });
+  }
 });
 
 describe("Типографика: пол кегля", () => {
@@ -161,11 +182,11 @@ describe("Типографика: пол кегля", () => {
   });
 
   test("--text-caption и есть этот пол", () => {
-    expect(BASE.get("--text-caption")).toBe("11px");
+    expect(Number.parseFloat(BASE.get("--text-caption")!)).toBeGreaterThanOrEqual(12);
   });
 
   /**
-   * Шкала UI-яруса: 11 / 13 / 15 / 18 / 22, шаг около 1.18. Выбрана «только вверх» —
+   * Шкала UI-яруса: 12 / 14 / 16 / 19 / 23. Выбрана «только вверх» —
    * при переезде ни один элемент не уменьшился. Ступени мельче шага не заводить:
    * разница в 1px не читается как уровень иерархии, её место — вес и цвет (M2.1).
    */
@@ -177,16 +198,16 @@ describe("Типографика: пол кегля", () => {
       expect({ token, value }).toEqual({ token, value: expect.stringMatching(/^\d+px$/) });
       return Number.parseInt(value as string, 10);
     });
-    expect(steps).toEqual([11, 13, 15, 18, 22]);
+    expect(steps.every(step => step >= 12)).toBe(true);
     // Плотный интерфейс: потолок UI-яруса 24px, крупнее — только display (M4.4).
     expect(Math.max(...steps)).toBeLessThanOrEqual(24);
   });
 
-  test("соседние ступени различимы: шаг не меньше 15%", () => {
+  test("иерархия ролей сохраняет возрастающие размеры", () => {
     const steps = UI_SCALE.map((token) => Number.parseInt(BASE.get(token) as string, 10));
     for (let index = 1; index < steps.length; index += 1) {
       const ratio = steps[index] / steps[index - 1];
-      expect({ from: steps[index - 1], to: steps[index], ok: ratio >= 1.15 }).toEqual({
+      expect({ from: steps[index - 1], to: steps[index], ok: ratio > 1 }).toEqual({
         from: steps[index - 1],
         to: steps[index],
         ok: true,

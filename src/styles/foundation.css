@@ -16,23 +16,23 @@
   color-scheme: light;
 
   /* Поверхности: base — страница, surface — карточка, raised/sunken — акценты. */
-  --bg-base: #f6f5f1;
-  --bg-surface: #ffffff;
-  --bg-raised: #eeeee9;
-  --bg-sunken: #e2e5e9;
+  --bg-base: #eee9e4;
+  --bg-surface: #fffcf8;
+  --bg-raised: #f0ebf3;
+  --bg-sunken: #e4dce9;
 
   /* Текст по убыванию силы. Контраст к --bg-base и --bg-surface проверяет bun test. */
-  --fg-strong: #202a35;
-  --fg: #384653;
-  --fg-muted: #596572;
-  --fg-subtle: #5d73a0;
+  --fg-strong: #2e2935;
+  --fg: #4b4453;
+  --fg-muted: #655d6e;
+  --fg-subtle: #685f70;
 
-  /* Акцентная рампа — единственный источник фирменного синего. */
-  --accent-300: #7ea4ff;
-  --accent-400: #4f82ff;
-  --accent-500: #2454c6;
-  --accent-600: #0b45d8;
-  --accent-700: #07349f;
+  /* Акцентная рампа — единый сливовый акцент интерфейса. */
+  --accent-300: #b3a2c8;
+  --accent-400: #80649f;
+  --accent-500: #6b4d8a;
+  --accent-600: #583d76;
+  --accent-700: #432d5a;
 
   /* Семантика состояния (M5.2): success/error взяты из прежних sage/rose без сдвига. */
   --color-success: #187957;
@@ -42,11 +42,19 @@
   --color-warning: #9c6200;
   --color-warning-bg: #fff6e5;
   --color-info: var(--accent-500);
-  --color-info-bg: #eaf1ff;
-  --color-disabled: #8999ba;
+  --color-info-bg: #f0eaf6;
+  --color-disabled: #746d7b;
 
-  --line: rgba(12, 53, 145, 0.2);
-  --line-soft: rgba(12, 53, 145, 0.1);
+  --accent-rgb: 107, 77, 138;
+  --ink-rgb: 46, 41, 53;
+  --on-accent: #ffffff;
+  --decor-gold: #ae9169;
+  --decor-glow: #ddcce9;
+  --shadow-card: 0 2px 6px rgba(46, 41, 53, 0.025), 0 16px 48px -24px rgba(46, 41, 53, 0.20);
+  --shadow-raised: 0 8px 16px -8px rgba(46, 41, 53, 0.12), 0 28px 56px -24px rgba(46, 41, 53, 0.24);
+  --line-control: #83768a;
+  --line: rgba(62, 43, 78, 0.22);
+  --line-soft: rgba(62, 43, 78, 0.11);
 
   /* ——— Псевдонимы прежних имён. Не использовать в новом коде. ——— */
   --ink: var(--bg-base);
@@ -59,8 +67,8 @@
   --muted: var(--fg-muted);
   --muted-2: var(--fg-subtle);
   --brass: var(--accent-500);
-  --brass-2: #073bbd;
-  --brass-deep: #336dff;
+  --brass-2: var(--accent-700);
+  --brass-deep: var(--accent-600);
   --brass-300: var(--accent-300);
   --brass-400: var(--accent-400);
   --brass-500: var(--accent-500);
@@ -72,13 +80,13 @@
   --sage-bg: var(--color-success-bg);
 
   --table-base: var(--bg-surface);
-  --table-header: #e5eeff;
-  --table-hover: #f0f5ff;
-  --table-control: #e6eeff;
-  --table-control-hover: #d2e1ff;
+  --table-header: var(--bg-raised);
+  --table-hover: #f4eff7;
+  --table-control: #eee7f3;
+  --table-control-hover: #e5dcec;
   --table-text: var(--fg-strong);
-  --table-text-secondary: #365487;
-  --table-text-tertiary: #5f7194;
+  --table-text-secondary: var(--fg);
+  --table-text-tertiary: var(--fg-muted);
 
   /* Гарнитуры. CHANGED (M4.4): объявлены один раз и только те, что реально грузит
      index.html. Прежние "Instrument Serif" и "Inter" не подключались никогда и
@@ -86,7 +94,7 @@
      Georgia и system-ui. */
   --display: "Manrope", system-ui, sans-serif;
   --ui: "Manrope", system-ui, -apple-system, sans-serif;
-  --mono: "Space Mono", ui-monospace, "SFMono-Regular", monospace;
+  --mono: "Manrope", system-ui, sans-serif;
 
   /*
    * ШКАЛА КЕГЛЯ. CHANGED (M4.1/M4.2): раньше в интерфейсе жило около сорока
@@ -95,14 +103,13 @@
    *
    * UI-слой — плотность данных, потолок 24px. Иерархия внутри него задаётся
    * ВЕСОМ и ЦВЕТОМ, а не долями пикселя: шаг 13/13.5/14 глазом не читается.
-   * --text-caption — абсолютный пол. Ниже 11px кириллица теряет различительные
-   * признаки строчных: «в», «н», «п», «и» схлопываются в один штрих.
+   * --text-caption — минимальный размер подписи: 12px. Основной текст — 16px.
    */
-  --text-page: 22px;
-  --text-section: 18px;
-  --text-body: 15px;
-  --text-label: 13px;
-  --text-caption: 11px;
+  --text-page: 23px;
+  --text-section: 19px;
+  --text-body: 16px;
+  --text-label: 14px;
+  --text-caption: 12px;
 
   /* Display-слой — только плакатные заголовки. Это подпись интерфейса (identity). */
   --display-xl: clamp(58px, 10.4vw, 142px);
@@ -135,9 +142,12 @@
   --r-lg: 32px;
   --r-pill: 999px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --spring: cubic-bezier(0.16, 1.3, 0.3, 1);
-  --t-fast: 0.16s var(--ease);
-  --t: 0.28s var(--ease);
+  --spring: var(--ease);
+  --motion-feedback: 140ms;
+  --motion-state: 220ms;
+  --motion-enter: 300ms;
+  --t-fast: var(--motion-feedback) var(--ease);
+  --t: var(--motion-state) var(--ease);
   --maxw: 1440px;
 }
 
@@ -152,24 +162,30 @@
  * литералами. Включать авто-режим только после M5.2 — см. docs/design-system-prd.md.
  */
 :root[data-theme="dark"] {
-  --bg-base: #090b15;
-  --bg-surface: #111629;
-  --bg-raised: #171d33;
-  --bg-sunken: #1c2340;
-  --ink-2: #0c1020;
+  --accent-rgb: 196, 166, 224;
+  --ink-rgb: 220, 208, 232;
+  --on-accent: #21172b;
+  --decor-glow: #382943;
+  --shadow-card: none;
+  --shadow-raised: none;
+  --bg-base: #15121b;
+  --bg-surface: #211c28;
+  --bg-raised: #2a2333;
+  --bg-sunken: #302739;
+  --ink-2: #19141f;
 
-  --fg-strong: #f2ecdd;
-  --fg: #d3cdbf;
-  --fg-muted: #a8b0c9;
-  --fg-subtle: #8a93b2;
+  --fg-strong: #f4edf7;
+  --fg: #ddd3e3;
+  --fg-muted: #c0b5c8;
+  --fg-subtle: #b6a8c0;
 
-  --accent-300: #f4d79a;
-  --accent-400: #e4b361;
-  --accent-500: #e4b361;
-  --accent-600: #cdb075;
-  --accent-700: #b89353;
-  --brass-2: #f4d79a;
-  --brass-deep: #b98a3e;
+  --accent-300: #d5bfe8;
+  --accent-400: #c4a6e0;
+  --accent-500: #c4a6e0;
+  --accent-600: #b391d0;
+  --accent-700: #a782c7;
+  --brass-2: var(--accent-300);
+  --brass-deep: var(--accent-600);
 
   --color-success: #8ec79c;
   --color-success-bg: rgba(134, 192, 149, 0.12);
@@ -177,18 +193,19 @@
   --color-error-bg: rgba(207, 125, 125, 0.12);
   --color-warning: #e8bd7a;
   --color-warning-bg: rgba(232, 189, 122, 0.12);
-  --color-info-bg: rgba(228, 179, 97, 0.12);
-  --color-disabled: #5c6688;
+  --color-info-bg: rgba(var(--accent-rgb), 0.12);
+  --color-disabled: var(--fg-muted);
 
+  --line-control: #a894b6;
   --line: rgba(242, 236, 221, 0.09);
   --line-soft: rgba(242, 236, 221, 0.055);
 
-  --table-header: #121827;
-  --table-hover: #151c2d;
-  --table-control: #1a2235;
-  --table-control-hover: #222c43;
-  --table-text-secondary: #c3cbe0;
-  --table-text-tertiary: #a4adc6;
+  --table-header: var(--bg-raised);
+  --table-hover: #302739;
+  --table-control: #352c3f;
+  --table-control-hover: #40334c;
+  --table-text-secondary: var(--fg);
+  --table-text-tertiary: var(--fg-muted);
 }
 
 * {
@@ -263,7 +280,7 @@ body::before {
 }
 
 .app > * {
-  animation: rise-in 0.72s var(--ease) both;
+  animation: rise-in var(--motion-enter) var(--ease) both;
 }
 
 .app > .hero {
@@ -271,11 +288,11 @@ body::before {
 }
 
 .app > .session-movement {
-  animation-delay: 0.12s;
+  animation-delay: 0.04s;
 }
 
 .app > .movements {
-  animation-delay: 0.2s;
+  animation-delay: 0.08s;
 }
 
 @keyframes rise-in {

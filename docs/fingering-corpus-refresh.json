@@ -1,0 +1,457 @@
+{
+  "date": "2026-09-05",
+  "mode": "rebuild",
+  "corpusFiles": 29,
+  "exportedMxlFiles": 58,
+  "pmUpdated": 21,
+  "pmCreated": 0,
+  "catalogIdsUnchanged": true,
+  "validation": "Parsed musical note fields unchanged in both exports; all fingering digits 1–5. PM update API confirmed each save; no remote playback or visual check.",
+  "rows": [
+    {
+      "source": "c-l-hanon/hanon-condensed-exercises-1-to-30/hanon-condensed-exercises-1-to-30.mxl",
+      "sourceSha256": "e12dcfafba6a41777abff8fba8d0546549ed958040a82634dc7c6e3ffc0a74e9",
+      "notes": 1280,
+      "fingerings": 1280,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "34dc42c3bfa5e434a394afe77c1626740638bd0e6e27aab92410514ae5d8971f",
+      "pianoMarvelMxlSha256": "34dc42c3bfa5e434a394afe77c1626740638bd0e6e27aab92410514ae5d8971f",
+      "pm": {
+        "pieceId": 158198,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:41:57.432Z"
+      }
+    },
+    {
+      "source": "coldplay/clocks-coldplay/clocks-coldplay.mxl",
+      "sourceSha256": "b64eed52d86f132a6ab1195475ea895f9cbdfd547ee8be95e27ccd85eb42294f",
+      "notes": 2609,
+      "fingerings": 2571,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "2cd24253a30ff6efe81358d2a148e70d626bb7570c6622702a40c9503f5e149e",
+      "pianoMarvelMxlSha256": "54b2bfd6ca4ed39b08a9a90c0084d46ed4102ba583660f8ad101d641f441241b",
+      "pm": {
+        "pieceId": 157794,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:42:49.720Z"
+      }
+    },
+    {
+      "source": "dorian-marko-arrangement-interstellar-2014/cornfield-chase-7564499/cornfield-chase.mxl",
+      "sourceSha256": "4e7b4e828908889cbf5343b2d0d6b78273e9f78fdbebfc464dc07e16cc62f2ff",
+      "notes": 420,
+      "fingerings": 415,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "4215b4f7ca0b082e55557958cb70359c9f17b5dfbea487741e841a30254f31b0",
+      "pianoMarvelMxlSha256": "c9c95776082c9e81f5e2d1dbdcbcc9ea12ceba0f66a24049f5bb910390cd49e7",
+      "pm": null
+    },
+    {
+      "source": "ed-sheeran/ed-sheeran-bad-habits-easy-piano/ed-sheeran-bad-habits-easy-piano.mxl",
+      "sourceSha256": "2465b76f36cfc11eb2dd278739bb94998206eca78734ca912c03dae5ed91daec",
+      "notes": 491,
+      "fingerings": 423,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "a897e5f9eb287311cb2058e9485dd5e1e110a8944891ae1421d7fcd6004bfeb1",
+      "pianoMarvelMxlSha256": "a897e5f9eb287311cb2058e9485dd5e1e110a8944891ae1421d7fcd6004bfeb1",
+      "pm": {
+        "pieceId": 157815,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:42:17.082Z"
+      }
+    },
+    {
+      "source": "erik-satie/gymnopedie-no-1-satie/gymnopedie-no-1-satie.mxl",
+      "sourceSha256": "a655f6bb407557e5531103353267ed32015e77ff56ea76e4625d902c465f314d",
+      "notes": 557,
+      "fingerings": 455,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "d9d2c1de1a24f784829575db135438f942e636dfe4e874aa3a78f94e0aac9da3",
+      "pianoMarvelMxlSha256": "08780e07bc4c1405f14099ee51e2b70767b0a37540da9fcf179726f12cd6dece",
+      "pm": {
+        "pieceId": 157779,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:43:14.202Z"
+      }
+    },
+    {
+      "source": "hans-zimmer/cornfield-chase-11391754/cornfield-chase.mxl",
+      "sourceSha256": "3bf8f443b9b13d4b5630fac8230f1851d2b4fdb43605d1f56851fe0525e8ad50",
+      "notes": 1251,
+      "fingerings": 1219,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "bc008e8cc73c67e87d0ee47b3493851f49202773d5ac79fbf3996e7f1302276e",
+      "pianoMarvelMxlSha256": "90c6063b2521728c59aa9da46bcc2d8e188337cfd820ff74f8de65ac7dbbd474",
+      "pm": {
+        "pieceId": 160263,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:41:31.993Z"
+      }
+    },
+    {
+      "source": "hans-zimmer/cornfield-chase/cornfield-chase.mxl",
+      "sourceSha256": "3bf8f443b9b13d4b5630fac8230f1851d2b4fdb43605d1f56851fe0525e8ad50",
+      "notes": 1251,
+      "fingerings": 1219,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "8c9c8f5a6dfcb37b7bc5d8445c3d46fe671fe28cc7db72ad5b462e4d84f0c8e5",
+      "pianoMarvelMxlSha256": "29a3ce37cd27992286eb72c3bf17e298322048d645f9bb1e2067bb5f5bd9a63c",
+      "pm": null
+    },
+    {
+      "source": "hans-zimmer/interstellar-hans-zimmer-interstellar/interstellar-hans-zimmer-interstellar.mxl",
+      "sourceSha256": "df3ea1f61b00c9e6c803f1a0af538f8e5d8092444cfb908963766a588798e2f2",
+      "notes": 2127,
+      "fingerings": 2049,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "92652853bbc2a53640f5f4e6632518216dad2302ca9f595dd3912527c29e190a",
+      "pianoMarvelMxlSha256": "161d4fb51435f6b331d51d53b0735c35589e19d3ede2f1d6b413ba85a2d7cd6d",
+      "pm": null
+    },
+    {
+      "source": "imagine-dragons/radioactive-imagine-dragons/radioactive-imagine-dragons.mxl",
+      "sourceSha256": "1ccccd2030a31716b84f5a0b1ce65abeaf16c8c1e7b14c9d3828425c3e78ddcf",
+      "notes": 1667,
+      "fingerings": 1558,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "e7041ef7023e60add857146fee1d6428558fbd040e44685cce48fd7733b5d7c3",
+      "pianoMarvelMxlSha256": "70f391c54e24e534e505e37f1ff95120b27d8d17dd233d664c5a158388ac1b8e",
+      "pm": {
+        "pieceId": 157837,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:42:12.523Z"
+      }
+    },
+    {
+      "source": "indila/love-story-indila-love-story-indila-piano/love-story-indila-love-story-indila-piano.mxl",
+      "sourceSha256": "bd7061a0b7756c65717cf80f799047793e2d11546c00337c01b8849cb79dd32e",
+      "notes": 812,
+      "fingerings": 752,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "97cead275b742a1c03b3199fea5ed7312bb06238e50f13db7a547b1bee1b102c",
+      "pianoMarvelMxlSha256": "ad8bcc96af63a180c707df953d9d62815b87232086ae13c1522a70e327ed518b",
+      "pm": {
+        "pieceId": 155634,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:44:29.262Z"
+      }
+    },
+    {
+      "source": "kate-bush/running-up-that-hill-kate-bush/running-up-that-hill-kate-bush.mxl",
+      "sourceSha256": "01cf45826ed7875cca977c324d3917c2391887a31f05fa5740eb3bb91a70c7fa",
+      "notes": 1066,
+      "fingerings": 977,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "32cff71e8a0259eebfd00b8f23aea1f57aa1822521bfdcef6911b87c448b84ca",
+      "pianoMarvelMxlSha256": "634e18c54558da54c2dec214378d303349069846f257af70d2da1677ddce6420",
+      "pm": {
+        "pieceId": 156053,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:44:02.991Z"
+      }
+    },
+    {
+      "source": "korol-i-shut/lesnik-korol-i-shut/lesnik-korol-i-shut.mxl",
+      "sourceSha256": "744b6bc60e749e69871ab75b4e5f544800f3d8efa08f659ca56ebfce74c9ac7a",
+      "notes": 1841,
+      "fingerings": 1673,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "5dab17af2270d3340c425d9ec90613baf39e6bc91a988fb2bdb1086760bea642",
+      "pianoMarvelMxlSha256": "d2be2f39ed2283deb89a2db92713f73182463796bb64917d2d28059134626b10",
+      "pm": {
+        "pieceId": 157783,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:43:03.059Z"
+      }
+    },
+    {
+      "source": "lizz-southern/major-scales-chords-and-arpeggios/major-scales-chords-and-arpeggios.mxl",
+      "sourceSha256": "9454d37d6cce6ce301c25fb09713fda9613dbafa6868dce7358def2d248e9263",
+      "notes": 1176,
+      "fingerings": 1086,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "4d8c5ee4980696844c060299b8eb9244187cbdaf8b5e449243137d55ccab3922",
+      "pianoMarvelMxlSha256": "705cbc261e3a2c87c2cb4fee82a303a438991907d925f1b39ba44c15cab20f20",
+      "pm": {
+        "pieceId": 158199,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:41:43.330Z"
+      }
+    },
+    {
+      "source": "lorien-testard/lumiere-clair-obscur-expedition-33/lumiere-clair-obscur-expedition-33.mxl",
+      "sourceSha256": "7cf587d838441a40ba23c86297a8b15cf46fcf1f668b27e31124d7ff3d9de5d8",
+      "notes": 1606,
+      "fingerings": 1492,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "6f86e9a159141e425673edecb54b3142af9d2f6fb9def42f4976a91f2a43254e",
+      "pianoMarvelMxlSha256": "f4a3ab1f1e61495b7d5ced21746137bafb6e43e3effd50ff57f13125be83e637",
+      "pm": {
+        "pieceId": 156056,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:43:51.998Z"
+      }
+    },
+    {
+      "source": "ludwig-van-beethoven/moonlight-sonata/moonlight-sonata.mxl",
+      "sourceSha256": "2d6daf35e0311f6b4b4b9c3f0b2f5e4288d239db418c1590232315d8b7c437ea",
+      "notes": 1210,
+      "fingerings": 1156,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "ae87e7b51a6479e44e5487ea19e3a6e4d069f2ae8d1feca7753d4ba66e6472a4",
+      "pianoMarvelMxlSha256": "84448c002dde6bc6c6f9c9dfcdeca82da0d1106c419946ca35acbc8b9e7e60c6",
+      "pm": null
+    },
+    {
+      "source": "metallica/nothing-else-matters-metallica/nothing-else-matters-metallica.mxl",
+      "sourceSha256": "f43b7b5b7027e4c5865cb51470995b58d9464b2ee71af6aa23d3672a91696102",
+      "notes": 1794,
+      "fingerings": 1656,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "d286e6c0f18d7817bc5c9cf386e0845b33aedb5d4a9ee2425f500b7c5663b666",
+      "pianoMarvelMxlSha256": "8381951dc560d698139abc2ae0c65a67a9ea356ec7fd339e1c7eee658c88b397",
+      "pm": {
+        "pieceId": 157778,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:43:33.217Z"
+      }
+    },
+    {
+      "source": "metallica/nothing-else-matters/nothing-else-matters.mxl",
+      "sourceSha256": "a82b4b8e7b03de880f06a77bc9a0017ba330bede931878a31375cb6d8da1ba90",
+      "notes": 590,
+      "fingerings": 530,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "21de70206deaf29f6597c7e3566d5723ac45887c3b84c3e901777383518cc910",
+      "pianoMarvelMxlSha256": "e65aba8d6dcb34e2f92e7ebc09e3a6a3e189ac6a49e25ad5b706a79a96c6383e",
+      "pm": null
+    },
+    {
+      "source": "metallica/the-unforgiven/the-unforgiven.mxl",
+      "sourceSha256": "213fe59441ae20b780ba860fb3be3db30c38ae2db73ecf1339da1537792390ab",
+      "notes": 572,
+      "fingerings": 565,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "6fb183c1c0633dab1cca54c002c1a714164b6b9e3f946d69a36f46f897ce4cdb",
+      "pianoMarvelMxlSha256": "68de3e923ab9aed836ee0dd1f73de47e65e41d3e379577f95b0e40147b516a1d",
+      "pm": {
+        "pieceId": 119271,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:44:57.760Z"
+      }
+    },
+    {
+      "source": "music-by-hans-zimmer/cornfield-chase-piano-cover/cornfield-chase-piano-cover.mxl",
+      "sourceSha256": "4e7b4e828908889cbf5343b2d0d6b78273e9f78fdbebfc464dc07e16cc62f2ff",
+      "notes": 420,
+      "fingerings": 415,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "63e12613d5ca705dd2c3f808deb4ac9e0f8dea60e6bda203c3ddf7fe055c6029",
+      "pianoMarvelMxlSha256": "38f6a44d96851f8bce40825d3dc60bbad3b75a5309afc0316eaaf7fe0f398e63",
+      "pm": null
+    },
+    {
+      "source": "pyotr-ilyich-tchaikovsky/swan-lake/swan-lake.mxl",
+      "sourceSha256": "5118e682a0b09e2b6e5107b3138edae211f6f63752fdd5ce7bd1ade55c7258b1",
+      "notes": 345,
+      "fingerings": 326,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "f67ce94a9a9856c92fb2e648cb5f64ff03c647589c01e0168bcfe61579cf568e",
+      "pianoMarvelMxlSha256": "f67ce94a9a9856c92fb2e648cb5f64ff03c647589c01e0168bcfe61579cf568e",
+      "pm": {
+        "pieceId": 161808,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:41:20.198Z"
+      }
+    },
+    {
+      "source": "radiohead/karma-police/karma-police.mxl",
+      "sourceSha256": "2e2c6054621136576dfce901770e19e9a8d969d072609ae403638c93123328d2",
+      "notes": 1215,
+      "fingerings": 1050,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "caee56e238d884dc7651330c26cf144c0ca8a4c5030f1d8cac1aade51071f2cf",
+      "pianoMarvelMxlSha256": "c236d6164321502a6d7fb6d02f12b37d71622e98136b9e337d6e12a80432ed23",
+      "pm": {
+        "pieceId": 119316,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:44:49.624Z"
+      }
+    },
+    {
+      "source": "radiohead/no-surprises-radiohead/no-surprises-radiohead.mxl",
+      "sourceSha256": "b9a7394190cd86ad27cbb78ad912300af73fcc1c6554e4304cd7668017bc0f44",
+      "notes": 321,
+      "fingerings": 275,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "a8c572cc2429290be4ef97053e2074ad97235b4569332eb8bcc477a64a2d673f",
+      "pianoMarvelMxlSha256": "24d080bc132d5724c0c4b06ecb2b586a638b6881b91c11b312619b0c69b89014",
+      "pm": {
+        "pieceId": 119318,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:44:35.086Z"
+      }
+    },
+    {
+      "source": "robert-miles/children-robert-miles/children-robert-miles.mxl",
+      "sourceSha256": "92e52c82d40bdc2a2413dd86c65649003dff966e8a1755c37c121ac16401aebf",
+      "notes": 710,
+      "fingerings": 643,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "01ea3d686c5a983dd9815b63725517e439f7e3c258a58dab81fdc4c3c03f9b9a",
+      "pianoMarvelMxlSha256": "bd23a40942bea7264b44a2399b122ad408340c1f41b3c3c52e9343305a0c1d77",
+      "pm": {
+        "pieceId": 157795,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:42:26.259Z"
+      }
+    },
+    {
+      "source": "simone-dagli-orti/piano-major-scales-fingerings/piano-major-scales-fingerings.mxl",
+      "sourceSha256": "b37b695928cdb66df01b12694dd6493f814dce90dbd7e80ecc40af33bdc40c97",
+      "notes": 870,
+      "fingerings": 870,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "ac89c34c80e2e46ba6e4030e7917e32d864794af7b8d29ad52efa7f6d3de6359",
+      "pianoMarvelMxlSha256": "ac89c34c80e2e46ba6e4030e7917e32d864794af7b8d29ad52efa7f6d3de6359",
+      "pm": null
+    },
+    {
+      "source": "theodore-shapiro/severance-main-theme-theodore-shapiro/severance-main-theme-theodore-shapiro.mxl",
+      "sourceSha256": "a734309fdeac2ce5c7882ff729d5a9c0b208c893ba89891bd3fd00ba01e63a5d",
+      "notes": 298,
+      "fingerings": 259,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "4cd2660258e80fd105f7687fc62ff6f1b8a6b38dcadc97db1d84713676e25e4e",
+      "pianoMarvelMxlSha256": "66183ddd41b7b27b3439aaea144634727b3fe17006cd6ac96e4367b4c95b8f0c",
+      "pm": {
+        "pieceId": 157776,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:43:39.902Z"
+      }
+    },
+    {
+      "source": "tom-odell/another-love-tom-odell/another-love-tom-odell.mxl",
+      "sourceSha256": "ca71eba16f0727b7281ebfe008f30b4e195b7c78ca3c502880407676cdbab70f",
+      "notes": 2417,
+      "fingerings": 2061,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "0a745bf32c923fec1522606a3add4792c9ec282d87838046cf70385bba97f5f4",
+      "pianoMarvelMxlSha256": "e91f0bedad65677be605dd6b7dc3563e7eadbad02926f6575ce9f2248d941d2d",
+      "pm": {
+        "pieceId": 156052,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:44:23.470Z"
+      }
+    },
+    {
+      "source": "unknown/nuvole-bianchi-13585063/nuvole-bianchi.mxl",
+      "sourceSha256": "b17e2c40c0e33e6cbba604dc4cd4709a5c0aae42d847e377a3aab04614050eb5",
+      "notes": 1587,
+      "fingerings": 1555,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "f5336c6f6e3207b3034a87f1a4c36618e4948a01e35a42b0d580e1c7b4355dbe",
+      "pianoMarvelMxlSha256": "70e1968098d833caf66e8d2139bc2864a809900b6de5121711bb07da753eee08",
+      "pm": null
+    },
+    {
+      "source": "unknown/nuvole-bianchi/nuvole-bianchi.mxl",
+      "sourceSha256": "b17e2c40c0e33e6cbba604dc4cd4709a5c0aae42d847e377a3aab04614050eb5",
+      "notes": 1587,
+      "fingerings": 1555,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "02c2dd09f364b76d46a8208ab4cffade410d8fc697eb4092dae5858913a1bc96",
+      "pianoMarvelMxlSha256": "26148343fa185be53ecf6b2ac8d015fdfcb59ef16e5828c069bb375091ed3734",
+      "pm": {
+        "pieceId": 160278,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:44:10.592Z"
+      }
+    },
+    {
+      "source": "слова-и-музыка-земфиры-рамазановои/п-м-м-л/п-м-м-л.mxl",
+      "sourceSha256": "f64ed6d3d9c0fd78b7d519d17194b5770f0f8d9e4a080411500310c6301a5115",
+      "notes": 1162,
+      "fingerings": 1056,
+      "musicPreserved": true,
+      "validDigits": true,
+      "fingeredSha256": "258f5edd4105c944d62e3e068ed4ae2129453f8ae87ae834704bf69fc55ec1ee",
+      "pianoMarvelMxlSha256": "bdf92e21e7f7994564d67c6401767a84d3b34bc1a5d7ed9c7af9af8a2d8eb447",
+      "pm": {
+        "pieceId": 162121,
+        "status": "confirmed",
+        "httpStatus": 200,
+        "matchesBuild": true,
+        "finishedAt": "2026-09-04T21:41:10.124Z"
+      }
+    }
+  ]
+}

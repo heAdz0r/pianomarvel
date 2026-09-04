@@ -64,7 +64,7 @@
 }
 
 .session-movement.unknown {
-  border-color: rgba(228, 179, 97, 0.12);
+  border-color: rgba(var(--accent-rgb), 0.12);
 }
 
 .session-movement.unknown .status-dot {
@@ -78,7 +78,7 @@
 }
 
 .session-movement.waiting {
-  border-color: rgba(228, 179, 97, 0.25);
+  border-color: rgba(var(--accent-rgb), 0.25);
 }
 
 .session-movement.waiting .status-dot {

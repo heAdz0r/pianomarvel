@@ -9,6 +9,7 @@ import {
   nextTick,
 } from "vue";
 import FurEliseStaff from "./components/FurEliseStaff.vue";
+import MusicAtmosphere from "./components/MusicAtmosphere.vue";
 import AuthMovement from "./components/AuthMovement.vue";
 import FileMovement from "./components/FileMovement.vue";
 import MuseScoreMovement from "./components/MuseScoreMovement.vue"; // CHANGED: поиск на MuseScore
@@ -502,6 +503,7 @@ function reset() {
 </script>
 
 <template>
+  <MusicAtmosphere />
   <div class="app">
     <!-- CHANGED: док источника и навигация живут в одном sticky-ряду —
          одна высота, один радиус, одно стекло, одна линия отсчёта. -->

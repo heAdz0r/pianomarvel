@@ -220,7 +220,7 @@ html.motion .learning-option {
 /* Difficulty как «живой» меритель: плавный рост + градиент. */
 .difficulty-track i {
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--brass-400, #4f82ff), var(--brass, #1557ff));
+  background: linear-gradient(90deg, var(--brass-400, var(--accent-400)), var(--brass, var(--accent-500)));
   transition: width 0.6s var(--ease);
 }
 .difficulty-track {
