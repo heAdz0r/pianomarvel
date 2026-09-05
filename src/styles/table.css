@@ -204,7 +204,7 @@ html.motion .library-filter.active::before {
   isolation: isolate;
   border: 1px solid rgba(var(--accent-rgb), 0.18);
   border-radius: 22px;
-  background: linear-gradient(150deg, #f1faf6 0%, #f1f6ff 54%, #f6f3ff 100%);
+  background: linear-gradient(150deg, #f1faf6 0%, #f1f6ff 54%, #f3f7ff 100%); /* CHANGED: без лавандового */
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.9) inset,
     0 14px 32px rgba(var(--ink-rgb), 0.06);
@@ -366,7 +366,7 @@ html.motion .library-filter.active::before {
   line-height: 1.08;
 }
 .learn-mode-panel-title em {
-  color: rgba(var(--accent-rgb), 0.62);
+  color: var(--accent-500); /* CHANGED: сплошной акцент вместо 62% прозрачности — контраст заголовка */
   font-style: normal;
 }
 .learn-mode-lead {
@@ -686,8 +686,8 @@ html.motion .library-filter.active::before {
   --stage-soft: rgba(189, 101, 5, 0.1);
 }
 .learn-mode-step.is-summarize {
-  --stage: #7137d4;
-  --stage-soft: rgba(113, 55, 212, 0.11);
+  --stage: var(--accent-600); /* CHANGED: синий вместо фиолетового */
+  --stage-soft: rgba(var(--accent-rgb), 0.11); /* CHANGED */
 }
 .learn-mode-step.is-whole {
   --stage: var(--fg-strong);
@@ -766,7 +766,7 @@ html.motion .library-filter.active::before {
   border: 0;
   border-radius: 0;
   background:
-    radial-gradient(circle at 100% 0%, rgba(113, 55, 212, 0.08), transparent 55%),
+    radial-gradient(circle at 100% 0%, rgba(var(--accent-rgb), 0.08), transparent 55%), /* CHANGED */
     rgba(255, 255, 255, 0.9);
   transition:
     border-color 200ms var(--tbl-ease),
@@ -779,7 +779,7 @@ html.motion .library-filter.active::before {
 .learn-mode-metrics li:hover,
 .learn-mode-metrics li:focus-visible {
   z-index: 10;
-  border-color: rgba(91, 43, 176, 0.28);
+  border-color: rgba(var(--accent-rgb), 0.28); /* CHANGED */
   background-color: rgba(255, 255, 255, 0.92);
 }
 .learn-mode-metrics span {
@@ -791,7 +791,7 @@ html.motion .library-filter.active::before {
   text-transform: uppercase;
 }
 .learn-mode-metrics strong {
-  color: #5b2bb0;
+  color: var(--accent-600); /* CHANGED */
   font-family: var(--mono);
   font-size: var(--text-label);
   font-weight: 800;
@@ -818,7 +818,7 @@ html.motion .library-filter.active::before {
 .learn-mode-metric-name code {
   padding: 2px 5px;
   border-radius: 5px;
-  color: rgba(var(--ink-rgb), 0.58);
+  color: var(--fg-muted); /* CHANGED: 58% чернил не дотягивали до AA на подложке */
   background: rgba(var(--accent-rgb), 0.07);
   font: 750 var(--text-caption)/1 var(--mono);
   letter-spacing: 0.04em;
@@ -1177,11 +1177,9 @@ html.motion .library-filter.active::before {
   border-radius: 22px;
   background: var(--tbl-paper);
   box-shadow: 0 20px 48px rgba(var(--ink-rgb), 0.07);
-  /* Блюпринт-сетка едва заметной подложкой */
-  background-image:
-    linear-gradient(rgba(var(--accent-rgb), 0.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(var(--accent-rgb), 0.028) 1px, transparent 1px);
-  background-size: 34px 34px;
+  /* CHANGED: блюпринт-сетка убрана — на синем акценте она читалась как
+     вертикальные волосяные линии сквозь все строки и мешала чтению таблицы. */
+  background-image: none;
 }
 
 .piece-table {
@@ -2414,9 +2412,10 @@ html.motion .library-filter.active::before {
 }
 
 .table-primary-action.is-rebuild {
-  --action-gradient: linear-gradient(135deg, #9b72f8 0%, #7c3aed 52%, #6425cf 100%);
-  --action-gradient-hover: linear-gradient(135deg, #7540d8 0%, #5e25be 52%, #481994 100%);
-  --action-glow: rgba(124, 58, 237, 0.28);
+  /* CHANGED: пересборка — глубокий индиго-синий, чтобы отличаться от основного акцента без фиолетового */
+  --action-gradient: linear-gradient(135deg, #4f6bd8 0%, #2e4bb5 52%, #1f378c 100%);
+  --action-gradient-hover: linear-gradient(135deg, #2e4bb5 0%, #22398f 52%, #172a6b 100%);
+  --action-glow: rgba(46, 75, 181, 0.28);
 }
 
 /* Привязка XML в покое не имеет заливки: только синяя пунктирная граница.

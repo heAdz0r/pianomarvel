@@ -13,3 +13,8 @@ captures/
 .claude/settings.local.json
 CLAUDE.md
 AGENTS.md
+.DS_Store
+.codex/
+.grepai
+.grepai.hzr-backup-*/
+outputs/

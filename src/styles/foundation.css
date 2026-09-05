@@ -16,23 +16,23 @@
   color-scheme: light;
 
   /* Поверхности: base — страница, surface — карточка, raised/sunken — акценты. */
-  --bg-base: #eee9e4;
-  --bg-surface: #fffcf8;
-  --bg-raised: #f0ebf3;
-  --bg-sunken: #e4dce9;
+  --bg-base: #f3f6fb; /* CHANGED: сине-белая тема */
+  --bg-surface: #ffffff; /* CHANGED: сине-белая тема */
+  --bg-raised: #eaf0fa; /* CHANGED: сине-белая тема */
+  --bg-sunken: #dde6f4; /* CHANGED: сине-белая тема */
 
   /* Текст по убыванию силы. Контраст к --bg-base и --bg-surface проверяет bun test. */
-  --fg-strong: #2e2935;
-  --fg: #4b4453;
-  --fg-muted: #655d6e;
-  --fg-subtle: #685f70;
+  --fg-strong: #0c1a33; /* CHANGED: сине-белая тема */
+  --fg: #26395c; /* CHANGED: сине-белая тема */
+  --fg-muted: #475c80; /* CHANGED: сине-белая тема */
+  --fg-subtle: #4d6285; /* CHANGED: сине-белая тема */
 
   /* Акцентная рампа — единый сливовый акцент интерфейса. */
-  --accent-300: #b3a2c8;
-  --accent-400: #80649f;
-  --accent-500: #6b4d8a;
-  --accent-600: #583d76;
-  --accent-700: #432d5a;
+  --accent-300: #93b3f5; /* CHANGED: сине-белая тема */
+  --accent-400: #2f66f2; /* CHANGED: сине-белая тема */
+  --accent-500: #1557ff; /* CHANGED: сине-белая тема */
+  --accent-600: #0f46d6; /* CHANGED: сине-белая тема */
+  --accent-700: #0b3599; /* CHANGED: сине-белая тема */
 
   /* Семантика состояния (M5.2): success/error взяты из прежних sage/rose без сдвига. */
   --color-success: #187957;
@@ -42,19 +42,19 @@
   --color-warning: #9c6200;
   --color-warning-bg: #fff6e5;
   --color-info: var(--accent-500);
-  --color-info-bg: #f0eaf6;
-  --color-disabled: #746d7b;
+  --color-info-bg: #e8f0ff; /* CHANGED: сине-белая тема */
+  --color-disabled: #6f7f99; /* CHANGED: сине-белая тема */
 
-  --accent-rgb: 107, 77, 138;
-  --ink-rgb: 46, 41, 53;
+  --accent-rgb: 21, 87, 255; /* CHANGED: сине-белая тема */
+  --ink-rgb: 12, 26, 51; /* CHANGED: сине-белая тема */
   --on-accent: #ffffff;
-  --decor-gold: #ae9169;
-  --decor-glow: #ddcce9;
-  --shadow-card: 0 2px 6px rgba(46, 41, 53, 0.025), 0 16px 48px -24px rgba(46, 41, 53, 0.20);
-  --shadow-raised: 0 8px 16px -8px rgba(46, 41, 53, 0.12), 0 28px 56px -24px rgba(46, 41, 53, 0.24);
-  --line-control: #83768a;
-  --line: rgba(62, 43, 78, 0.22);
-  --line-soft: rgba(62, 43, 78, 0.11);
+  --decor-line: #9db6e0; /* CHANGED: вместо --decor-gold — холодная линия декора */
+  --decor-glow: #d9e5ff; /* CHANGED: сине-белая тема */
+  --shadow-card: 0 2px 6px rgba(12, 26, 51, 0.03), 0 16px 48px -24px rgba(12, 26, 51, 0.22); /* CHANGED: сине-белая тема */
+  --shadow-raised: 0 8px 16px -8px rgba(12, 26, 51, 0.12), 0 28px 56px -24px rgba(12, 26, 51, 0.24); /* CHANGED: сине-белая тема */
+  --line-control: #6b7fa2; /* CHANGED: сине-белая тема */
+  --line: rgba(12, 26, 51, 0.18); /* CHANGED: сине-белая тема */
+  --line-soft: rgba(12, 26, 51, 0.09); /* CHANGED: сине-белая тема */
 
   /* ——— Псевдонимы прежних имён. Не использовать в новом коде. ——— */
   --ink: var(--bg-base);
@@ -81,9 +81,9 @@
 
   --table-base: var(--bg-surface);
   --table-header: var(--bg-raised);
-  --table-hover: #f4eff7;
-  --table-control: #eee7f3;
-  --table-control-hover: #e5dcec;
+  --table-hover: #f1f5fc; /* CHANGED: сине-белая тема */
+  --table-control: #e9eff9; /* CHANGED: сине-белая тема */
+  --table-control-hover: #dde6f5; /* CHANGED: сине-белая тема */
   --table-text: var(--fg-strong);
   --table-text-secondary: var(--fg);
   --table-text-tertiary: var(--fg-muted);
@@ -162,48 +162,49 @@
  * литералами. Включать авто-режим только после M5.2 — см. docs/design-system-prd.md.
  */
 :root[data-theme="dark"] {
-  --accent-rgb: 196, 166, 224;
-  --ink-rgb: 220, 208, 232;
-  --on-accent: #21172b;
-  --decor-glow: #382943;
+  --accent-rgb: 143, 173, 255; /* CHANGED: сине-белая тема */
+  --ink-rgb: 205, 217, 238; /* CHANGED: сине-белая тема */
+  --on-accent: #0a1a3a; /* CHANGED: сине-белая тема */
+  --decor-glow: #1b2c4d; /* CHANGED: сине-белая тема */
+  --decor-line: #34507f; /* CHANGED */
   --shadow-card: none;
   --shadow-raised: none;
-  --bg-base: #15121b;
-  --bg-surface: #211c28;
-  --bg-raised: #2a2333;
-  --bg-sunken: #302739;
-  --ink-2: #19141f;
+  --bg-base: #0a1223; /* CHANGED: сине-белая тема */
+  --bg-surface: #111c31; /* CHANGED: сине-белая тема */
+  --bg-raised: #18253d; /* CHANGED: сине-белая тема */
+  --bg-sunken: #1e2d48; /* CHANGED: сине-белая тема */
+  --ink-2: #0d1628; /* CHANGED: сине-белая тема */
 
-  --fg-strong: #f4edf7;
-  --fg: #ddd3e3;
-  --fg-muted: #c0b5c8;
-  --fg-subtle: #b6a8c0;
+  --fg-strong: #eef3fc; /* CHANGED: сине-белая тема */
+  --fg: #cdd9ee; /* CHANGED: сине-белая тема */
+  --fg-muted: #a9bad8; /* CHANGED: сине-белая тема */
+  --fg-subtle: #9fb1d1; /* CHANGED: сине-белая тема */
 
-  --accent-300: #d5bfe8;
-  --accent-400: #c4a6e0;
-  --accent-500: #c4a6e0;
-  --accent-600: #b391d0;
-  --accent-700: #a782c7;
+  --accent-300: #bcd0ff; /* CHANGED: сине-белая тема */
+  --accent-400: #9db8ff; /* CHANGED: сине-белая тема */
+  --accent-500: #8fadff; /* CHANGED: сине-белая тема */
+  --accent-600: #6f96f5; /* CHANGED: сине-белая тема */
+  --accent-700: #5d86e8; /* CHANGED: сине-белая тема */
   --brass-2: var(--accent-300);
   --brass-deep: var(--accent-600);
 
-  --color-success: #8ec79c;
-  --color-success-bg: rgba(134, 192, 149, 0.12);
-  --color-error: #e0a0a0;
-  --color-error-bg: rgba(207, 125, 125, 0.12);
-  --color-warning: #e8bd7a;
-  --color-warning-bg: rgba(232, 189, 122, 0.12);
+  --color-success: #86d3a5; /* CHANGED: сине-белая тема */
+  --color-success-bg: rgba(134, 211, 165, 0.12); /* CHANGED: сине-белая тема */
+  --color-error: #f0a3a8; /* CHANGED: сине-белая тема */
+  --color-error-bg: rgba(240, 163, 168, 0.12); /* CHANGED: сине-белая тема */
+  --color-warning: #f0c078; /* CHANGED: сине-белая тема */
+  --color-warning-bg: rgba(240, 192, 120, 0.12); /* CHANGED: сине-белая тема */
   --color-info-bg: rgba(var(--accent-rgb), 0.12);
   --color-disabled: var(--fg-muted);
 
-  --line-control: #a894b6;
-  --line: rgba(242, 236, 221, 0.09);
-  --line-soft: rgba(242, 236, 221, 0.055);
+  --line-control: #8ea2c8; /* CHANGED: сине-белая тема */
+  --line: rgba(205, 217, 238, 0.10); /* CHANGED: сине-белая тема */
+  --line-soft: rgba(205, 217, 238, 0.06); /* CHANGED: сине-белая тема */
 
   --table-header: var(--bg-raised);
-  --table-hover: #302739;
-  --table-control: #352c3f;
-  --table-control-hover: #40334c;
+  --table-hover: #1e2d48; /* CHANGED: сине-белая тема */
+  --table-control: #22334f; /* CHANGED: сине-белая тема */
+  --table-control-hover: #2a3d5c; /* CHANGED: сине-белая тема */
   --table-text-secondary: var(--fg);
   --table-text-tertiary: var(--fg-muted);
 }
@@ -242,9 +243,9 @@ body::after {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(90% 58% at 8% -8%, rgba(228, 179, 97, 0.13), transparent 58%),
-    radial-gradient(80% 62% at 100% 3%, rgba(82, 91, 132, 0.16), transparent 58%),
-    linear-gradient(180deg, var(--ink-2) 0%, var(--ink) 48%, #070911 100%);
+    radial-gradient(90% 58% at 8% -8%, rgba(143, 173, 255, 0.14), transparent 58%), /* CHANGED */
+    radial-gradient(80% 62% at 100% 3%, rgba(21, 87, 255, 0.10), transparent 58%), /* CHANGED */
+    linear-gradient(180deg, var(--ink-2) 0%, var(--ink) 48%, var(--ink) 100%); /* CHANGED */
 }
 
 body::before {
@@ -255,8 +256,8 @@ body::before {
   pointer-events: none;
   background-image: repeating-linear-gradient(
     to bottom,
-    rgba(242, 236, 221, 0.022) 0,
-    rgba(242, 236, 221, 0.022) 1px,
+    rgba(12, 26, 51, 0.03) 0, /* CHANGED */
+    rgba(12, 26, 51, 0.03) 1px, /* CHANGED */
     transparent 1px,
     transparent 88px
   );
