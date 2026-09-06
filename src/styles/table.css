@@ -3257,9 +3257,11 @@ html.motion .piece-table tbody tr.reveal:not(.in) .difficulty-track i {
   justify-content: flex-end;
 }
 .fg-workbench .plan-build {
-  flex: 1 1 260px;
+  flex: 1 1 300px; /* CHANGED: подпись «Обновить на Piano Marvel» на hover уезжает влево и
+                      при 260px упиралась в капсулу-шеврон; запас нужен и для системного
+                      шрифта, когда Manrope не загрузился */
   width: auto;
-  min-width: 260px;
+  min-width: 300px;
 }
 .fg-workbench .plan-build .action-label {
   max-width: calc(100% - 82px);

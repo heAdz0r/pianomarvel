@@ -175,19 +175,21 @@ html.motion .reveal.in, html.motion .piece-table tbody tr.reveal.in { transform:
 .app input:focus, .app select:focus, .app textarea:focus {
   border-color: var(--accent-500); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), .12);
 }
-.app .topbar-cta, .app .btn:not(.ghost), .app .plan-build, .app .table-primary-action {
+/* CHANGED: .plan-build и .table-primary-action исключены — у них Payard-механика из table.css
+   (градиент в покое, белая поверхность и тёмные чернила на hover, синяя капсула-шеврон).
+   Сплошной акцент поверх неё давал тёмный текст на синем. */
+.app .topbar-cta, .app .btn:not(.ghost) {
   color: var(--on-accent); background: var(--accent-500); box-shadow: 0 4px 12px -8px rgba(var(--accent-rgb), .45);
 }
 .app .btn.ghost { color: var(--fg); background: var(--bg-surface); border-color: var(--line-control); box-shadow: none; }
-.app .topbar-cta:hover, .app .btn:not(.ghost):hover:not(:disabled),
-.app .plan-build:hover:not(:disabled), .app .table-primary-action:hover:not(:disabled) {
+.app .topbar-cta:hover, .app .btn:not(.ghost):hover:not(:disabled) { /* CHANGED */
   background: var(--accent-600);
 }
 .app .btn.ghost:hover:not(:disabled) { background: var(--bg-raised); color: var(--accent-600); }
 .app .btn:disabled, .app .plan-build:disabled, .app .table-primary-action:disabled {
   color: var(--fg-muted); background: var(--bg-sunken); border-color: var(--line-soft); opacity: 1; box-shadow: none;
 }
-.app .btn, .app .plan-build, .app .table-primary-action { font-weight: 600; letter-spacing: .01em; }
+.app .btn { font-weight: 600; letter-spacing: .01em; } /* CHANGED: типографика Payard-кнопок — в table.css */
 .app .mode-switch .ms-item { font-size: var(--text-label); font-weight: 600; }
 .app .mode-switch .ms-item-text b { font-weight: 600; }
 .app .mode-switch .ms-thumb { box-shadow: 0 4px 10px -4px rgba(var(--accent-rgb), .25); }
